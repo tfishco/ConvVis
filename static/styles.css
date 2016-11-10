@@ -1,0 +1,133 @@
+path {
+  stroke: steelblue;
+  stroke-width: 1;
+  fill: none;
+}
+
+.axis {
+  shape-rendering: crispEdges;
+}
+
+.x.axis line {
+  stroke: lightgrey;
+}
+
+.x.axis .minor {
+  stroke-opacity: .5;
+}
+
+.x.axis path {
+	display: none;
+}
+
+.y.axis line, .y.axis path {
+	fill: none;
+	stroke: #000;
+}
+
+* {
+  font-family: 'Lato', sans-serif;
+  color: #333333;
+}
+
+h1 {
+  padding: 40px;
+}
+
+body {
+  background: #eee;
+}
+
+.container {
+  margin: 0 auto;
+  position: relative;
+  text-align: center;
+}
+
+#sliders {
+  display: inline-block;
+  vertical-align: middle;
+  background: #fff;
+  margin: 20px;
+  padding: 20px;
+  color: #666;
+  width: 180px;
+  box-shadow: 0px 40px 60px -20px rgba(0,0,0,0.2);
+}
+
+#plot {
+  display: inline-block;
+  vertical-align: middle;
+  background: #fff;
+  box-shadow: 0px 40px 60px -20px rgba(0,0,0,0.2);
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  background: none;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+  height: 5px;
+  background: #ddd;
+  border: none;
+  border-radius: 3px;
+}
+
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  border: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #555;
+  margin-top: -5px;
+  position: relative;
+}
+
+input[type=range]:focus {
+  outline: none;
+}
+input[type=range]:focus::-webkit-slider-thumb:after {
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+          transform: translateX(-50%);
+  background: #eee;
+  border-radius: 5px;
+  color: #555;
+  padding: 5px 10px;
+  border: 2px solid #555;
+}
+
+input[type=range]:focus::-webkit-slider-runnable-track {
+  background: #ccc;
+}
+
+input[type="text"] {
+  width: 30px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #ccc;
+  outline: none;
+  color: #999;
+  font-size: 16px;
+  text-align: center;
+  margin: 0 6px;
+}
+
+input[type="submit"] {
+  background: #555;
+  border: 0;
+  width: 150px;
+  height: 40px;
+  border-radius: 3px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out;
+}
+input[type="submit"]:hover {
+  background: #cc3600;
+}
