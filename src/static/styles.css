@@ -107,7 +107,7 @@ input[type=range]:focus::-webkit-slider-runnable-track {
 }
 
 input[type="text"] {
-  width: 30px;
+  width: 50px;
   background: transparent;
   border: 0;
   border-bottom: 1px solid #ccc;
@@ -127,6 +127,7 @@ input[type="submit"] {
   color: white;
   cursor: pointer;
   transition: background 0.3s ease-in-out;
+  margin: 20px;
 }
 input[type="submit"]:hover {
   background: #cc3600;
