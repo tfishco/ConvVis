@@ -1,162 +1,107 @@
+from __future__ import print_function # In python 2.7
 from flask import Flask, render_template, request, send_file
-
-###############################################################################
-#################################### GA #######################################
-###############################################################################
-
+from tensorflow.examples.tutorials.mnist import input_data
 import sys
-import random
-import matplotlib.pyplot as pyplot
-import matplotlib.patches as mpatches
 import numpy as np
+import tensorflow as tf
+from six.moves import cPickle as pickle
+from six.moves import range
+import time
 
-class Individual:
-    def __init__(self, gene):
-        self.gene = gene
-        self.fitness = 0
-
-    def get_gene(self):
-        return self.gene
-
-    def set_gene(self, gene):
-        self.gene = gene
-
-    def get_fitness(self):
-        return self.fitness
-
-    def set_fitness(self, fitness):
-        self.fitness = fitness
-
-    def get_string(self):
-        s = ""
-        for i in range(0, len(self.gene)):
-            s = s + str(self.gene[i])
-        return s + " | " + str(self.fitness)
-
-
-def GAMain(gene_size, population_size, generations, mutation_rate):
-    population = []
-    new_population = []
-
-    mean_fitnesses = []
-    best_fitnesses = []
-
-    initalise(population_size, gene_size, population)
-    evaluate(population_size, gene_size, population)
-    for i in range(0, generations):
-        best_individual = get_best_individual(population_size, population)
-        select(population_size, gene_size, population, new_population)
-        xover(population_size, gene_size, new_population)
-        mutate(population_size, gene_size, new_population, mutation_rate)
-        evaluate(population_size, gene_size, new_population)
-        new_population[get_worst_index(population_size, population)] = best_individual
-
-        total_fitness = get_total_fitness(population_size, new_population)
-        mean_fitness = get_mean_fitness(population_size,gene_size, total_fitness)
-        population = list(new_population)
-        new_population = []
-        mean_fitnesses.append(mean_fitness)
-        best_fitnesses.append(best_individual.get_fitness())
-    return list([mean_fitnesses,best_fitnesses])
-
-
-def initalise(population_size, gene_size, population):
-    for i in range(0, population_size):
-        population.append(Individual(random_gene(gene_size)))
-
-def evaluate(population_size, gene_size, population):
-    for i in range(0, population_size):
-        count = 0
-        for j in range(0, gene_size):
-            if population[i].get_gene()[j] == 1:
-                count += 1
-        population[i].set_fitness(count)
-
-def select(population_size, gene_size, population, new_population):
-    for i in range(0, population_size):
-        parent1 = random.randint(0, population_size - 1)
-        parent2 = random.randint(0, population_size - 1)
-        if population[parent1].get_fitness() > population[parent2].get_fitness():
-            parent_gene = population[parent1].get_gene()
-        else:
-            parent_gene = population[parent2].get_gene()
-        child = Individual(parent_gene)
-        new_population.append(child)
-
-def xover(population_size, gene_size, population):
-    for i in range(0, population_size, 2):
-        rand = random.randint(1, gene_size - 1)
-        for j in range(rand, gene_size):
-            population[i].get_gene()[j], population[i + 1].get_gene()[j] = population[i + 1].get_gene()[j], population[i].get_gene()[j]
-
-def mutate(population_size, gene_size, population, mutation_rate):
-    for i in range(0, population_size):
-        temp_gene = population[i].get_gene()[:]
-        for j in range(0, gene_size):
-            rand = random.random()
-            if rand < mutation_rate:
-                temp_gene[j] = temp_gene[j] ^ 1
-        population[i].set_gene(temp_gene)
-
-def get_total_fitness(population_size, population):
-    count = 0
-    for i in range(0, population_size):
-        count += population[i].get_fitness()
-    return count
-
-def get_mean_fitness(population_size, gene_size, total_fitness):
-    return total_fitness / population_size
-
-def get_best_fitness(population_size, population):
-    best = 0
-    for i in range(0, population_size):
-        if population[i].get_fitness() > best:
-            best = population[i].get_fitness()
-    return best
-
-def get_best_individual(population_size, population):
-    ind = None
-    fitness = 0
-    for i in range(0,population_size):
-        if population[i].get_fitness() > fitness:
-            ind = population[i]
-            fitness = population[i].get_fitness()
-    return ind
-
-def get_worst_index(population_size, population):
-    worst_fitness = 50
-    worst_index = -1
-    for i in range(0, population_size):
-        if population[i].get_fitness() < worst_fitness:
-            worst_fitness = population[i].get_fitness()
-            worst_index = i
-    return worst_index
-
-def random_gene(gene_size):
-    gene = [None] * gene_size
-    for i in range(0, gene_size):
-        gene[i] = random.randint(0,1)
-    return gene
-
-def print_population(population):
-    for i in range(0 , len(population)):
-        print(population[i].get_string())
-
-def print_gene(gene_size, gene):
-    s = ""
-    for i in range(0, gene_size):
-        s += str(gene[i]) + " "
-    print(s)
-
+mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
 
 ###############################################################################
-################################## Web App ####################################
+################################# Conv ########################################
 ###############################################################################
+def convnet_main(iteration):
+
+    sess = tf.InteractiveSession()
+
+    x = tf.placeholder(tf.float32, shape=[None, 28*28])
+    y_ = tf.placeholder(tf.float32, shape=[None,10])
+
+    W = tf.Variable(tf.zeros([28*28,10]))
+    b = tf.Variable(tf.zeros([10]))
+
+    sess.run(tf.initialize_all_variables())
+
+    y = tf.matmul(x,W) + b
+
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y,y_))
+
+    train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+
+    def weight_variable(shape):
+        inital = tf.truncated_normal(shape, stddev=0.1)
+        return tf.Variable(inital)
+
+    def bias_variable(shape):
+        inital = tf.constant(0.1, shape=shape)
+        return tf.Variable(inital)
+
+    def conv2d(x,W):
+        return tf.nn.conv2d(x, W, strides=[1,1,1,1], padding="SAME")
+
+    def max_pool_2x2(x):
+        return tf.nn.max_pool(x, ksize=[1,2,2,1], strides=[1,2,2,1], padding="SAME")
+
+    x_image = tf.reshape(x, [-1,28,28,1])
+
+    W_conv1 = weight_variable([5,5,1,32])
+    b_conv1 = bias_variable([32])
+    h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
+    h_pool1 = max_pool_2x2(h_conv1)
+
+    W_conv2 = weight_variable([5,5,32,64])
+    b_conv2 = bias_variable([64])
+    h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
+    h_pool2 = max_pool_2x2(h_conv2)
+
+    W_fc1 = weight_variable([7 * 7 * 64, 1024])
+    b_fc1 = bias_variable([1024])
+
+    h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])
+    h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
+
+    keep_prob = tf.placeholder(tf.float32)
+    h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
+
+    W_fc2 = weight_variable([1024,10])
+    b_fc2 = bias_variable([10])
+
+    y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
+
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_conv, y_))
+    train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
+    correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    sess.run(tf.initialize_all_variables())
+    for i in range(0, iteration):
+      batch = mnist.train.next_batch(50)
+      train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
+
+    return accuracy.eval(feed_dict={
+        x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0})
+
+
+################################################################################
+################################ Flask #########################################
+################################################################################
+
+
 app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return "<h1>Flask root</h1>"
+    return render_template("main.html")
+
+@app.route("/train", methods=["POST"])
+def train():
+    iteration = int(request.form['iter'])
+    start_time = time.time()
+    accuracy = convnet_main(iteration)
+    end_time = time.time() - start_time
+    return render_template("train.html",accuracy=accuracy, time=round(end_time,1))
 
 @app.route("/ga")
 def ga():
