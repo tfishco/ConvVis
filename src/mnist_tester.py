@@ -3,6 +3,7 @@ import random
 import numpy as np
 from tensorflow.examples.tutorials.mnist import input_data
 import matplotlib.pyplot as plt
+import json
 
 #mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
 
@@ -92,14 +93,26 @@ def convolution(image, label):
     features_pool2 = np.round(np.multiply(get_feature_map(h_pool2.eval(feed_dict={x: image, y_: label,
         keep_prob: 1.0}), 7, 64).flatten(), 255), decimals=0).squeeze().tolist()
 
-    input_features[0] = [features_image, features_conv1, features_pool1, features_conv2, features_pool2]
-    input_features[1] = decision.argmax().squeeze().tolist()
-    input_features[2] = np.round(np.multiply(decision,100.0).squeeze(),decimals=6).tolist()
+    features = {}
+    features['image'] = features_image
+    features['conv1'] = features_conv1
+    features['pool1'] = features_pool1
+    features['conv2'] = features_conv2
+    features['pool2'] = features_pool2
 
-    return input_features
+    data = {}
+    data['features'] = features
+    data['decision'] = decision.argmax().squeeze().tolist()
+    data['certainty'] = np.round(np.multiply(decision,100.0).squeeze(),decimals=8).tolist()
+
+    return data
 
 #index = random.randint(0,10000)
 #features = convolution(mnist.test.images[index], mnist.test.labels[index])
+
+#text_file = open("Output.txt", "w")
+#text_file.write(features)
+#text_file.close()
 
 #print("Actual=", mnist.test.labels[index].argmax(), ": Prediction=", features[1])
 
