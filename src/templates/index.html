@@ -1,21 +1,49 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>MockUp</title>
-    <link rel="stylesheet" type="text/css" href="static/styles.css"></head>
-
+    <title>Deep Vis Graph</title>
+    <link rel="stylesheet" type="text/css" href="static/styles.css">
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
   </head>
   <body>
-    <div class="navbar">
-    </div>
-    <div class="sidebar">
-      <svg width="250" height="250"></svg>
-    </div>
     <div class="container">
-      <h1 class="bubble-title">VISUALISATIONS</h1>
+      <div class="sidebar">
+        <div class="chart"></div>
+        <canvas id="image">
+        </canvas>
+      </div>
+      <div class="canvas">
+        <script type="application/json" id="mis">
+          {
+            "nodes": [
+              {"name": "image"},
+              {"name": "conv_1"},
+              {"name": "pool_1"},
+              {"name": "conv_2"},
+              {"name": "pool_2"},
+              {"name": "output"}
+            ],
+            "links": [
+              {"source": 0, "target": 1},
+              {"source": 1, "target": 2},
+              {"source": 2, "target": 3},
+              {"source": 3, "target": 4},
+              {"source": 4, "target": 5}
+            ]
+          }
+        </script>
+      </div>
     </div>
-    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script>
+
+      var myImageData = ctx.createImageData(28, 28);
+
+    </script>
+    <script src="static/script.js"></script>
+    <script>
+      var decision = {{ features[2] }}
+    </script>
     <script src="static/bar.js"></script>
-    <script src="static/functions.js"></script>
   </body>
 </html>
