@@ -1,5 +1,11 @@
 import tensorflow as tf
 import random
+import numpy as np
+from tensorflow.examples.tutorials.mnist import input_data
+import matplotlib.pyplot as plt
+import json
+
+#mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
 
 def weight_variable(shape):
   initial = tf.truncated_normal(shape, stddev=0.1)
@@ -22,7 +28,7 @@ def get_feature_map(layer, image_size, channels):
     return temp_image.reshape((-1, image_size, image_size, 1))
 
 def convolution(image, label):
-    input_features = [None] * 7
+
     sess = tf.InteractiveSession()
 
     x = tf.placeholder(tf.float32, shape=[784])
@@ -72,42 +78,53 @@ def convolution(image, label):
     #print("Actual : Predicition")
     #print(mnist.test.labels[index].argmax(), ":", decision.argmax())
 
-    features_image = x_image.eval(feed_dict={x: image, y_: label,
-        keep_prob: 1.0})
+    features_image = np.round(np.multiply(x_image.eval(feed_dict={x: image, y_: label,
+        keep_prob: 1.0}).flatten(), 255), decimals=0).squeeze().tolist()
 
-    features_conv1 = get_feature_map(h_conv1.eval(feed_dict={x: image, y_: label,
-        keep_prob: 1.0}), 28, 32)
+    features_conv1 = np.round(np.multiply(get_feature_map(h_conv1.eval(feed_dict={x: image, y_: label,
+        keep_prob: 1.0}), 28, 32).flatten(), 255), decimals=0).squeeze().tolist()
 
-    features_pool1 = get_feature_map(h_pool1.eval(feed_dict={x: image, y_: label,
-        keep_prob: 1.0}), 14, 32)
+    features_pool1 = np.round(np.multiply(get_feature_map(h_pool1.eval(feed_dict={x: image, y_: label,
+        keep_prob: 1.0}), 14, 32).flatten(), 255), decimals=0).squeeze().tolist()
 
-    features_conv2 = get_feature_map(h_conv2.eval(feed_dict={x: image, y_: label,
-        keep_prob: 1.0}), 14, 64)
+    features_conv2 = np.round(np.multiply(get_feature_map(h_conv2.eval(feed_dict={x: image, y_: label,
+        keep_prob: 1.0}), 14, 64).flatten(), 255), decimals=0).squeeze().tolist()
 
-    features_pool2 = get_feature_map(h_pool2.eval(feed_dict={x: image, y_: label,
-        keep_prob: 1.0}), 7, 64)
+    features_pool2 = np.round(np.multiply(get_feature_map(h_pool2.eval(feed_dict={x: image, y_: label,
+        keep_prob: 1.0}), 7, 64).flatten(), 255), decimals=0).squeeze().tolist()
 
-    input_features[0] = features_image.tolist()
-    input_features[1] = features_conv1.tolist()
-    input_features[2] = features_pool1.tolist()
-    input_features[3] = features_conv2.tolist()
-    input_features[4] = features_pool2.tolist()
-    input_features[5] = decision.argmax().tolist()
-    input_features[6] = decision.tolist()
+    features = {}
+    features['image'] = features_image
+    features['conv1'] = features_conv1
+    features['pool1'] = features_pool1
+    features['conv2'] = features_conv2
+    features['pool2'] = features_pool2
 
-    return input_features
+
+    data = {}
+    data['structure'] = [1, 32, 64, 3136, 1024, 10]
+    data['features'] = features
+    data['prediction'] = decision.argmax().squeeze().tolist()
+    data['certainty'] = np.round(np.multiply(decision,100.0).squeeze(),decimals=8).tolist()
+
+    return data
 
 #index = random.randint(0,10000)
 #features = convolution(mnist.test.images[index], mnist.test.labels[index])
 
-#print(mnist.test.images.shape,index)
+#text_file = open("Output.txt", "w")
+#text_file.write(features)
+#text_file.close()
 
-#print(mnist.test.labels[index].argmax(), ":", features[5])
+#print("Actual=", mnist.test.labels[index].argmax(), ": Prediction=", features[1])
+
+#print(features[1])
 
 #fig = plt.figure()
 #fig.add_subplot(111)
-#plt.imshow(features_image.squeeze(), cmap='gray')
+#plt.imshow(features[0], cmap='gray')
 #plt.axis('off')
+
 #for j in range(32):
 #    fig.add_subplot(1,33,j + 1)
 #    plt.imshow(features_conv1[j].squeeze(), cmap='gray')
@@ -125,6 +142,5 @@ def convolution(image, label):
 #    plt.imshow(features_pool2[j].squeeze(), cmap='gray')
 #    plt.axis('off')
 #plt.show()
-
 #print("test accuracy %g"%accuracy.eval(feed_dict={
 #    x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))

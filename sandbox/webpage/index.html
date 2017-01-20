@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Deep Vis Graph</title>
+    <link rel="stylesheet" type="text/css" href="css/styles.css">
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="canvas">
+        <script type="application/json" id="mis">
+        {
+        "nodes": [
+          {"name": "image"},
+          {"name": "conv_1"},
+          {"name": "pool_1"},
+          {"name": "conv_2"},
+          {"name": "pool_2"},
+          {"name": "output"}
+        ],
+        "links": [
+          {"source": 0, "target": 1},
+          {"source": 1, "target": 2},
+          {"source": 2, "target": 3},
+          {"source": 3, "target": 4},
+          {"source": 4, "target": 5}
+        ]
+}
+        </script>
+      </div>
+    </container>
+    <script src="js/script.js"></script>
+  </body>
+</html>
