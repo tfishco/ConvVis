@@ -3,6 +3,7 @@ import random
 import numpy as np
 from tensorflow.examples.tutorials.mnist import input_data
 import matplotlib.pyplot as plt
+import math
 import json
 
 #mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
@@ -31,8 +32,7 @@ def get_image_brightness(image):
     total_brightness = 0
     for i in range(len(image)):
         total_brightness += image[i]
-    return total_brightness / 255.0
-
+    return math.pow((total_brightness / len(image)),2)
 
 def get_feature_json(features):
     feature_list = []

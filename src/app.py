@@ -1,9 +1,12 @@
+from __future__ import print_function
 from flask import Flask, render_template, request, send_file
 from tensorflow.examples.tutorials.mnist import input_data
 import random
 import mnist_tester
 import numpy as np
 import json
+import network_json
+import sys
 
 app = Flask(__name__)
 
@@ -16,12 +19,13 @@ def index():
 @app.route("/conv", methods=['POST'])
 def conv():
     index = int(request.form['val'])
+    struct = json.loads(request.form['struct'])
     image = mnist.test.images[index]
     label = mnist.test.labels[index]
-    features = mnist_tester.convolution(image, label)
     data = {}
     data['label'] = np.argmax(label)
-    data['convdata'] = features
+    data['convdata'] = mnist_tester.convolution(image, label)
+    data['struct'] = network_json.get_json(struct)
     return json.dumps(data)
 
 #@app.route("/conv-test)
