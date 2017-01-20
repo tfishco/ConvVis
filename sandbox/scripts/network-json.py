@@ -12,7 +12,7 @@ def get_json(struct):
         for j in range(struct[i]):
             node = {}
             node['name'] = "node" + str(i) + '_' + str(j)
-            if i % 194 == 0:
+            if i % (len(struct) - 1) == 0:
                 node['fixed'] = True
             nodes.append(node)
     # Links
@@ -33,22 +33,22 @@ def get_json(struct):
             for j in range(1, struct[i] + 1):
                 link1 = {}
                 link2 = {}
-                link1['source'] = j + 32
-                link2['source'] = j + 32
-                link1['target'] = j + 64 + j
-                link2['target'] = j + 64 + j - 1
+                link1['source'] = j + struct[i]
+                link2['source'] = j + struct[i]
+                link1['target'] = j + struct[i + 1] + j
+                link2['target'] = j + struct[i + 1] + j - 1
                 links.append(link1)
                 links.append(link2)
         if i == 3:
             for j in range(1,struct[i] + 1):
                 link = {}
-                link['source'] = j + 64
-                link['target'] = j + 64 + 64
+                link['source'] = j + struct[i]
+                link['target'] = j + struct[i] + struct[i + 1]
                 links.append(link)
         if i == 4:
             for j in range(1,struct[i] + 1):
                 link = {}
-                link['source'] = j + 64 + 64
+                link['source'] = j + struct[i - 1] + struct[i]
                 link['target'] = 193
                 links.append(link)
 
@@ -56,6 +56,3 @@ def get_json(struct):
     main['links'] = links
 
     return json.dumps(main)
-
-
-print get_json(struct)
