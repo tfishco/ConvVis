@@ -1,10 +1,11 @@
 * {
   margin: 0;
   padding: 0;
+  font-family: 'Lato', sans-serif;
 }
 
 .node {
-    stroke: #C70039;
+    stroke: #007CFF;
     stroke-width: 1.5px;
 }
 .link {
@@ -33,7 +34,13 @@ div.tooltip {
   position: fixed;
   background-color: #ddd;
   height: 700px;
+  width: 200px;
   right: 0;
+}
+
+.sidebarContainer {
+  width: 50%;
+  margin: 50px auto;
 }
 
 .chart {
@@ -54,4 +61,8 @@ div.tooltip {
   border: 1px solid;
   width: 100px;
   height: 100px;
+}
+
+.image-in {
+  width: 100px;
 }

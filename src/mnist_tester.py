@@ -28,7 +28,7 @@ def get_feature_map(layer, image_size, channels):
     return temp_image.reshape((-1, image_size, image_size, 1))
 
 def convolution(image, label):
-    input_features = [None] * 3
+
     sess = tf.InteractiveSession()
 
     x = tf.placeholder(tf.float32, shape=[784])
@@ -100,9 +100,11 @@ def convolution(image, label):
     features['conv2'] = features_conv2
     features['pool2'] = features_pool2
 
+
     data = {}
+    data['structure'] = [1, 32, 64, 3136, 1024, 10]
     data['features'] = features
-    data['decision'] = decision.argmax().squeeze().tolist()
+    data['prediction'] = decision.argmax().squeeze().tolist()
     data['certainty'] = np.round(np.multiply(decision,100.0).squeeze(),decimals=8).tolist()
 
     return data

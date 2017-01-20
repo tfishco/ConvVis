@@ -1,6 +1,6 @@
 //Constants for the SVG
-var width = 900,
-    height = 700;
+var width = 1100,
+    height = 660;
 
 //Set up the colour scale
 var color = d3.scale.category20();
@@ -52,7 +52,7 @@ var node = svg.selectAll(".node")
     .enter().append("circle")
     .attr("class", "node")
     .attr("r", 8)
-    .style("fill", "#FF5733")
+    .style("fill", "#FCFCFC")
     .call(force.drag)
     .on('mouseover', tip.show) //Added
     .on('mouseout', tip.hide) //Added
@@ -103,6 +103,7 @@ function connectedNodes() {
 
     if (toggle == 0) {
         //Reduce the opacity of all but the neighbouring nodes
+        d3.select(this).fixed = true;
         d = d3.select(this).node().__data__;
         node.style("opacity", function (o) {
             return neighboring(d, o) | neighboring(o, d) ? 1 : 0.1;
