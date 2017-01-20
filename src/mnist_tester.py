@@ -27,8 +27,10 @@ def get_feature_map(layer, image_size, channels):
     temp_image = temp_image.transpose((2, 0, 1))
     return temp_image.reshape((-1, image_size, image_size, 1))
 
-def convolution(image, label):
+def get_brightness():
+    return False
 
+def convolution(image, label):
     sess = tf.InteractiveSession()
 
     x = tf.placeholder(tf.float32, shape=[784])

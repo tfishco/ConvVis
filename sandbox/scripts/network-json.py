@@ -30,13 +30,13 @@ def get_json(struct):
                 link['target'] = j + struct[i] # 33 - 64
                 links.append(link)
         if i == 2:
-            for j in range(0, struct[i] + 1):
+            for j in range(1, struct[i] + 1):
                 link1 = {}
                 link2 = {}
                 link1['source'] = j + 32
                 link2['source'] = j + 32
                 link1['target'] = j + 64 + j
-                link2['target'] = j + 64 + j + 1
+                link2['target'] = j + 64 + j - 1
                 links.append(link1)
                 links.append(link2)
         if i == 3:
