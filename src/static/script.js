@@ -1,23 +1,19 @@
-function gen_graph(struct) {//Constants for the SVG
+function gen_graph(data) {
+
   var width = 1075,
       height = 660;
 
-  //Set up the colour scale
   var color = d3.scale.category20();
 
-  //Set up the force layout
   var force = d3.layout.force()
       .charge(-150)
       .linkDistance(30)
       .size([width, height]);
 
-  //Append a SVG to the body of the html page. Assign this SVG as an object to svg
   var svg = d3.select(".canvas").append("svg")
       .attr("width", width)
       .attr("height", height);
 
-  //---Insert------
-  //Set up tooltip
   var tip = d3.tip()
       .attr('class', 'd3-tip')
       .offset([-10, 0])
@@ -26,17 +22,13 @@ function gen_graph(struct) {//Constants for the SVG
       return  d.name + "</span>";
   })
   svg.call(tip);
-  //---End Insert---
 
-  //Read the data from the mis element
-  graph = struct
+  graph = JSON.parse(data.struct)
 
-  //Creates the graph data structure out of the json data
   force.nodes(graph.nodes)
       .links(graph.links)
       .start();
 
-  //Create all the line svgs but without locations yet
   var link = svg.selectAll(".link")
       .data(graph.links)
       .enter().append("line")
@@ -45,7 +37,6 @@ function gen_graph(struct) {//Constants for the SVG
       return Math.sqrt(d.value);
   });
 
-  //Do the same with the circles for the nodes - no
   var node = svg.selectAll(".node")
       .data(graph.nodes)
       .enter().append("circle")
@@ -55,10 +46,10 @@ function gen_graph(struct) {//Constants for the SVG
       .call(force.drag)
       .on('mouseover', tip.show) //Added
       .on('mouseout', tip.hide) //Added
-      .on('dblclick', connectedNodes); //Added code
+      .on('dblclick', connectedNodes);
+      //.on('click', updateImage)
 
 
-  //Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
   force.on("tick", function () {
       link.attr("x1", function (d) {
           return d.source.x;
@@ -81,10 +72,8 @@ function gen_graph(struct) {//Constants for the SVG
       });
   });
 
-  //Toggle stores whether the highlighting is on
   var toggle = 0;
 
-  //Create an array logging what is connected to what
   var linkedByIndex = {};
   for (i = 0; i < graph.nodes.length; i++) {
       linkedByIndex[i + "," + i] = 1;
@@ -93,15 +82,12 @@ function gen_graph(struct) {//Constants for the SVG
       linkedByIndex[d.source.index + "," + d.target.index] = 1;
   });
 
-  //This function looks up whether a pair are neighbours
   function neighboring(a, b) {
       return linkedByIndex[a.index + "," + b.index];
   }
 
   function connectedNodes() {
-
       if (toggle == 0) {
-          //Reduce the opacity of all but the neighbouring nodes
           d3.select(this).fixed = true;
           d = d3.select(this).node().__data__;
           node.style("opacity", function (o) {
@@ -112,16 +98,21 @@ function gen_graph(struct) {//Constants for the SVG
               return d.index==o.source.index | d.index==o.target.index ? 1 : 0.1;
           });
 
-          //Reduce the op
-
           toggle = 1;
       } else {
-          //Put them back to opacity=1
           node.style("opacity", 1);
           link.style("opacity", 1);
           toggle = 0;
       }
-
   }
+
+  for (i = 1; i <= 6; i++) {
+    //console.log(d3.select(d3.selectAll(".node")[0][i]));
+    for (j = 0; j < data.no_nodes[i - 1]; j++){
+      var brightness = data.convdata.features[i]["" + data.no_nodes[i - 1] + ""][j]);
+
+    }
+  }
+
+
 }
-//---End Insert---

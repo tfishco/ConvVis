@@ -11,7 +11,7 @@ def get_json(struct):
     for i in range(len(struct)):
         for j in range(struct[i]):
             node = {}
-            node['name'] = "node" + str(i) + '_' + str(j)
+            node['name'] = str(i) + '_' + str(j)
             if i % (len(struct) - 1) == 0:
                 node['fixed'] = True
                 node['y'] = 330
@@ -60,4 +60,4 @@ def get_json(struct):
     main['nodes'] = nodes
     main['links'] = links
 
-    return json.dumps(main)
+    return json.dumps(main) , struct

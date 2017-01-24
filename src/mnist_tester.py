@@ -1,10 +1,10 @@
 import tensorflow as tf
 import random
 import numpy as np
-from tensorflow.examples.tutorials.mnist import input_data
 import matplotlib.pyplot as plt
 import math
 import json
+#from tensorflow.examples.tutorials.mnist import input_data
 
 #mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
 
@@ -32,16 +32,29 @@ def get_image_brightness(image):
     total_brightness = 0
     for i in range(len(image)):
         total_brightness += image[i]
-    return math.pow((total_brightness / len(image)),2)
+    return total_brightness / len(image)
 
-def get_feature_json(features):
+def get_feature_json(features): # takes in contents of different layers in CNN e.g. conv1 or pool2
     feature_list = []
+    feature_brightness = []
     for i in range(len(features)):
-        image = {}
-        image['feature_' + str(i)] = features[i].tolist()
-        image['brightness'] = get_image_brightness(features[i].flatten())
-        feature_list.append(image)
+        feature_data = {}
+        feature_data['feature_' + str(i)] = to_three_channels(features[i].tolist())
+        feature_brightness.append(get_image_brightness(features[i].flatten()))
+        feature_list.append(feature_data)
+    feature_list.append(feature_brightness)
     return feature_list
+
+def to_three_channels(images): # takes in the images contained inside a feature
+    image_list = []
+    for i in range(len(images)):
+        pixel_list = []
+        for j in range(len(images[i])):
+            for k in range(3):
+                pixel_list.append(images[i][j])
+            pixel_list.append(255)
+        image_list.append(pixel_list)
+    return image_list
 
 def convolution(image, label):
     sess = tf.InteractiveSession()
@@ -90,11 +103,8 @@ def convolution(image, label):
     decision = fc_decision_data.eval(feed_dict={x: image, y_: label,
         keep_prob: 1.0})
 
-    #print("Actual : Predicition")
-    #print(mnist.test.labels[index].argmax(), ":", decision.argmax())
-
-    features_image = [np.round(np.multiply(x_image.eval(feed_dict={x: image, y_: label,
-        keep_prob: 1.0}), 255), decimals=0).squeeze()]
+    features_image = np.round(np.multiply(x_image.eval(feed_dict={x: image, y_: label,
+        keep_prob: 1.0}), 255), decimals=0).squeeze()
 
     features_conv1 = np.round(np.multiply(get_feature_map(h_conv1.eval(feed_dict={x: image, y_: label,
         keep_prob: 1.0}), 28, 32), 255), decimals=0).squeeze()
@@ -108,15 +118,18 @@ def convolution(image, label):
     features_pool2 = np.round(np.multiply(get_feature_map(h_pool2.eval(feed_dict={x: image, y_: label,
         keep_prob: 1.0}), 7, 64), 255), decimals=0).squeeze()
 
+    fully_con1 = np.round(np.multiply(h_fc1.eval(feed_dict={x: image, y_: label,
+        keep_prob: 1.0}), 255), decimals=0).reshape([32,32]).squeeze()
+
     features = {}
-    features['image'] = get_feature_json(features_image)
-    features['conv1'] = get_feature_json(features_conv1)
-    features['pool1'] = get_feature_json(features_pool1)
-    features['conv2'] = get_feature_json(features_conv2)
-    features['pool2'] = get_feature_json(features_pool2)
+    features[1] = get_feature_json(np.array([features_image.tolist()]))
+    features[2] = get_feature_json(features_conv1)
+    features[3] = get_feature_json(features_pool1)
+    features[4] = get_feature_json(features_conv2)
+    features[5] = get_feature_json(features_pool2)
+    features[6] = get_feature_json(np.array([fully_con1.tolist()]))
 
     data = {}
-    data['structure'] = [1, 32, 32, 64, 64, 1]
     data['features'] = features
     data['prediction'] = decision.argmax().squeeze().tolist()
     data['certainty'] = np.round(np.multiply(decision,100.0).squeeze(),decimals=8).tolist()

@@ -8,9 +8,9 @@ import json
 import network_json
 import sys
 
-app = Flask(__name__)
-
 mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
+
+app = Flask(__name__)
 
 @app.route("/")
 def index():
@@ -25,7 +25,7 @@ def conv():
     data = {}
     data['label'] = np.argmax(label)
     data['convdata'] = mnist_tester.convolution(image, label)
-    data['struct'] = network_json.get_json(struct)
+    data['struct'], data['no_nodes'] = network_json.get_json(struct)
     return json.dumps(data)
 
 #@app.route("/conv-test)
