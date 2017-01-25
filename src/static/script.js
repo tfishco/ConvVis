@@ -44,9 +44,10 @@ function gen_graph(data) {
       .attr("r", 8)
       .style("fill", "#FCFCFC")
       .call(force.drag)
-      .on('mouseover', tip.show) //Added
-      .on('mouseout', tip.hide) //Added
-      .on('dblclick', connectedNodes);
+      .on('click', onNodeClick);
+      //.on('mouseover', tip.show) //Added
+      //.on('mouseout', tip.hide) //Added
+      //.on('dblclick', connectedNodes);
       //.on('click', updateImage)
 
 
@@ -106,13 +107,47 @@ function gen_graph(data) {
       }
   }
 
+  var count = 0
   for (i = 1; i <= 6; i++) {
-    //console.log(d3.select(d3.selectAll(".node")[0][i]));
     for (j = 0; j < data.no_nodes[i - 1]; j++){
-      var brightness = data.convdata.features[i]["" + data.no_nodes[i - 1] + ""][j]);
-
+      count += 1
+      var brightness = data.convdata.features[i]["" + data.no_nodes[i - 1] + ""][j];
+      //d3.select(d3.selectAll(".node"))[0][0][0][count].style.brightness = brightness;
+      d3.select(d3.selectAll(".node"))[0][0][0][count].style.opacity = (brightness/50);
     }
   }
+  console.log(count);
 
+  function onNodeClick() {
+
+    var image_ref = d3.select(this)[0][0].__data__.name.split("_");
+
+    console.log(parseInt(image_ref[0]) + 1, image_ref[1]);
+
+    var raw = data.convdata.features[(parseInt(image_ref[0]) + 1)][image_ref[1]]["feature_" + parseInt(image_ref[1])];
+
+    console.log(raw);
+
+    var buffer = new Uint8ClampedArray(raw);
+
+    var width = Math.sqrt(raw.length / 4),
+      height = Math.sqrt(raw.length / 4);
+
+      console.log(width, height);
+
+    var canvas = document.getElementById('image'),
+      ctx = canvas.getContext('2d');
+
+    canvas.width = width;
+    canvas.height = height;
+    var idata = ctx.createImageData(width, height);
+    idata.data.set(buffer);
+    ctx.putImageData(idata, 0, 0);
+
+    document.getElementById("image-height").innerHTML = height;
+    document.getElementById("image-width").innerHTML = width;
+
+
+  }
 
 }

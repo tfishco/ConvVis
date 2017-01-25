@@ -48,12 +48,10 @@ def get_feature_json(features): # takes in contents of different layers in CNN e
 def to_three_channels(images): # takes in the images contained inside a feature
     image_list = []
     for i in range(len(images)):
-        pixel_list = []
         for j in range(len(images[i])):
             for k in range(3):
-                pixel_list.append(images[i][j])
-            pixel_list.append(255)
-        image_list.append(pixel_list)
+                image_list.append(images[i][j])
+            image_list.append(255)
     return image_list
 
 def convolution(image, label):
