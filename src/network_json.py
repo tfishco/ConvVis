@@ -1,7 +1,7 @@
 import json
 import numpy as np
 #struct = [1,32,32,64,64,3136,1024,10] fully connected
-struct = [1,32,32,64,64,1]
+#struct = [1,32,32,64,64,1]
 
 def get_json(struct):
     main = {}
@@ -11,9 +11,14 @@ def get_json(struct):
     for i in range(len(struct)):
         for j in range(struct[i]):
             node = {}
-            node['name'] = "node" + str(i) + '_' + str(j)
+            node['name'] = str(i) + '_' + str(j)
             if i % (len(struct) - 1) == 0:
                 node['fixed'] = True
+                node['y'] = 330
+                if i == 0:
+                    node['x'] = 50
+                else:
+                    node['x'] = 1000
             nodes.append(node)
     # Links
     for i in range(len(struct)):
@@ -55,4 +60,4 @@ def get_json(struct):
     main['nodes'] = nodes
     main['links'] = links
 
-    return json.dumps(main)
+    return json.dumps(main) , struct
