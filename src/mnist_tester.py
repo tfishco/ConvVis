@@ -34,6 +34,9 @@ def get_image_brightness(image):
         total_brightness += image[i]
     return total_brightness / len(image)
 
+def get_brightest():
+    return True
+
 def get_feature_json(features): # takes in contents of different layers in CNN e.g. conv1 or pool2
     feature_list = []
     feature_brightness = []
@@ -55,8 +58,6 @@ def to_three_channels(images): # takes in the images contained inside a feature
     return image_list
 
 def convolution(image, label):
-    sess = tf.InteractiveSession()
-
     x = tf.placeholder(tf.float32, shape=[784])
     y_ = tf.placeholder(tf.float32, shape=[10])
 
@@ -96,41 +97,42 @@ def convolution(image, label):
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     saver = tf.train.Saver()
-    saver.restore(sess, "pre-trained/mnist/checkpoint/mnist.ckpt")
-
-    decision = fc_decision_data.eval(feed_dict={x: image, y_: label,
-        keep_prob: 1.0})
-
-    features_image = np.round(np.multiply(x_image.eval(feed_dict={x: image, y_: label,
-        keep_prob: 1.0}), 255), decimals=0).squeeze()
-
-    features_conv1 = np.round(np.multiply(get_feature_map(h_conv1.eval(feed_dict={x: image, y_: label,
-        keep_prob: 1.0}), 28, 32), 255), decimals=0).squeeze()
-
-    features_pool1 = np.round(np.multiply(get_feature_map(h_pool1.eval(feed_dict={x: image, y_: label,
-        keep_prob: 1.0}), 14, 32), 255), decimals=0).squeeze()
-
-    features_conv2 = np.round(np.multiply(get_feature_map(h_conv2.eval(feed_dict={x: image, y_: label,
-        keep_prob: 1.0}), 14, 64), 255), decimals=0).squeeze()
-
-    features_pool2 = np.round(np.multiply(get_feature_map(h_pool2.eval(feed_dict={x: image, y_: label,
-        keep_prob: 1.0}), 7, 64), 255), decimals=0).squeeze()
-
-    fully_con1 = np.round(np.multiply(h_fc1.eval(feed_dict={x: image, y_: label,
-        keep_prob: 1.0}), 255), decimals=0).reshape([32,32]).squeeze()
-
-    features = {}
-    features[1] = get_feature_json(np.array([features_image.tolist()]))
-    features[2] = get_feature_json(features_conv1)
-    features[3] = get_feature_json(features_pool1)
-    features[4] = get_feature_json(features_conv2)
-    features[5] = get_feature_json(features_pool2)
-    features[6] = get_feature_json(np.array([fully_con1.tolist()]))
-
     data = {}
-    data['features'] = features
-    data['prediction'] = decision.argmax().squeeze().tolist()
-    data['certainty'] = np.round(np.multiply(decision,100.0).squeeze(),decimals=8).tolist()
+    with tf.Session() as sess:
+        saver.restore(sess, "pre-trained/mnist/checkpoint/mnist.ckpt")
+
+        decision = fc_decision_data.eval(feed_dict={x: image, y_: label,
+            keep_prob: 1.0})
+
+        features_image = np.round(np.multiply(x_image.eval(feed_dict={x: image, y_: label,
+            keep_prob: 1.0}), 255), decimals=0).squeeze()
+
+        features_conv1 = np.round(np.multiply(get_feature_map(h_conv1.eval(feed_dict={x: image, y_: label,
+            keep_prob: 1.0}), 28, 32), 255), decimals=0).squeeze()
+
+        features_pool1 = np.round(np.multiply(get_feature_map(h_pool1.eval(feed_dict={x: image, y_: label,
+            keep_prob: 1.0}), 14, 32), 255), decimals=0).squeeze()
+
+        features_conv2 = np.round(np.multiply(get_feature_map(h_conv2.eval(feed_dict={x: image, y_: label,
+            keep_prob: 1.0}), 14, 64), 255), decimals=0).squeeze()
+
+        features_pool2 = np.round(np.multiply(get_feature_map(h_pool2.eval(feed_dict={x: image, y_: label,
+            keep_prob: 1.0}), 7, 64), 255), decimals=0).squeeze()
+
+        fully_con1 = np.round(np.multiply(h_fc1.eval(feed_dict={x: image, y_: label,
+            keep_prob: 1.0}), 255), decimals=0).reshape([32,32]).squeeze()
+
+        features = {}
+        features[1] = get_feature_json(np.array([features_image.tolist()]))
+        features[2] = get_feature_json(features_conv1)
+        features[3] = get_feature_json(features_pool1)
+        features[4] = get_feature_json(features_conv2)
+        features[5] = get_feature_json(features_pool2)
+        features[6] = get_feature_json(np.array([fully_con1.tolist()]))
+
+        data['features'] = features
+        data['prediction'] = decision.argmax().squeeze().tolist()
+        data['certainty'] = np.round(np.multiply(decision,100.0).squeeze(),decimals=8).tolist()
 
     return data
 
