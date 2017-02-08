@@ -4,9 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import json
-#from tensorflow.examples.tutorials.mnist import input_data
+from tensorflow.examples.tutorials.mnist import input_data
 
-#mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
+mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
 
 def weight_variable(shape):
   initial = tf.truncated_normal(shape, stddev=0.1)
@@ -33,9 +33,6 @@ def get_image_brightness(image):
     for i in range(len(image)):
         total_brightness += image[i]
     return total_brightness / len(image)
-
-def get_brightest():
-    return True
 
 def get_feature_json(features): # takes in contents of different layers in CNN e.g. conv1 or pool2
     feature_list = []
@@ -91,53 +88,50 @@ def convolution(image, label):
 
     fc_decision_data = tf.nn.softmax(y_conv)
 
-    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_conv, y_))
-    train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
-    correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
     saver = tf.train.Saver()
-    data = {}
-    with tf.Session() as sess:
-        saver.restore(sess, "pre-trained/mnist/checkpoint/mnist.ckpt")
 
-        decision = fc_decision_data.eval(feed_dict={x: image, y_: label,
+    sess = tf.Session()
+
+    saver.restore(sess, "pre-trained/mnist/graph/mnist.ckpt")
+
+    decision = fc_decision_data.eval(feed_dict={x: image, y_: label,
             keep_prob: 1.0})
 
-        features_image = np.round(np.multiply(x_image.eval(feed_dict={x: image, y_: label,
+    features_image = np.round(np.multiply(x_image.eval(feed_dict={x: image, y_: label,
             keep_prob: 1.0}), 255), decimals=0).squeeze()
 
-        features_conv1 = np.round(np.multiply(get_feature_map(h_conv1.eval(feed_dict={x: image, y_: label,
+    features_conv1 = np.round(np.multiply(get_feature_map(h_conv1.eval(feed_dict={x: image, y_: label,
             keep_prob: 1.0}), 28, 32), 255), decimals=0).squeeze()
 
-        features_pool1 = np.round(np.multiply(get_feature_map(h_pool1.eval(feed_dict={x: image, y_: label,
+    features_pool1 = np.round(np.multiply(get_feature_map(h_pool1.eval(feed_dict={x: image, y_: label,
             keep_prob: 1.0}), 14, 32), 255), decimals=0).squeeze()
 
-        features_conv2 = np.round(np.multiply(get_feature_map(h_conv2.eval(feed_dict={x: image, y_: label,
+    features_conv2 = np.round(np.multiply(get_feature_map(h_conv2.eval(feed_dict={x: image, y_: label,
             keep_prob: 1.0}), 14, 64), 255), decimals=0).squeeze()
 
-        features_pool2 = np.round(np.multiply(get_feature_map(h_pool2.eval(feed_dict={x: image, y_: label,
+    features_pool2 = np.round(np.multiply(get_feature_map(h_pool2.eval(feed_dict={x: image, y_: label,
             keep_prob: 1.0}), 7, 64), 255), decimals=0).squeeze()
 
-        fully_con1 = np.round(np.multiply(h_fc1.eval(feed_dict={x: image, y_: label,
+    fully_con1 = np.round(np.multiply(h_fc1.eval(feed_dict={x: image, y_: label,
             keep_prob: 1.0}), 255), decimals=0).reshape([32,32]).squeeze()
 
-        features = {}
-        features[1] = get_feature_json(np.array([features_image.tolist()]))
-        features[2] = get_feature_json(features_conv1)
-        features[3] = get_feature_json(features_pool1)
-        features[4] = get_feature_json(features_conv2)
-        features[5] = get_feature_json(features_pool2)
-        features[6] = get_feature_json(np.array([fully_con1.tolist()]))
+    features = {}
+    features[1] = np.array([features_image.tolist()])
+        #features[2] = get_feature_json(features_conv1)
+        #features[3] = get_feature_json(features_pool1)
+        #features[4] = get_feature_json(features_conv2)
+        #features[5] = get_feature_json(features_pool2)
+        #features[6] = get_feature_json(np.array([fully_con1.tolist()]))
 
-        data['features'] = features
-        data['prediction'] = decision.argmax().squeeze().tolist()
-        data['certainty'] = np.round(np.multiply(decision,100.0).squeeze(),decimals=8).tolist()
+    data = {}
+    data['features'] = features
+        #data['prediction'] = decision.argmax().squeeze().tolist()
+        #data['certainty'] = np.round(np.multiply(decision,100.0).squeeze(),decimals=8).tolist()
 
     return data
 
-#index = random.randint(0,10000)
-#features = convolution(mnist.test.images[index], mnist.test.labels[index])
+index = random.randint(0,10000)
+features = convolution(mnist.test.images[index], mnist.test.labels[index])
 
 #print features
 
