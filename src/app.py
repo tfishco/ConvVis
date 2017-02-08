@@ -52,7 +52,7 @@ def get_conv_data(feature_list):
     features['3'] = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[2], 14, 32), 255), decimals=0))
     features['4'] = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[3], 14, 64), 255), decimals=0))
     features['5'] = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[4], 7, 64), 255), decimals=0))
-    features['6'] = get_feature_json([np.round(np.multiply(feature_list[6], 255), decimals=0)])
+    features['6'] = get_feature_json(np.array(np.round(np.multiply(feature_list[6], 255), decimals=0).tolist()))
 
     data = {}
     data['features'] = features
@@ -65,8 +65,8 @@ x = tf.placeholder("float", [784])
 sess = tf.Session()
 
 with tf.variable_scope("conv"):
-    prediction, variables, features = test_vars.conv(x)
-saver = tf.train.Saver(variables)
+    graph_variables, features = test_vars.conv(x)
+saver = tf.train.Saver(graph_variables)
 saver.restore(sess, "pre-trained/mnist/graph/mnist.ckpt")
 
 app = Flask(__name__)
@@ -81,7 +81,6 @@ def conv():
     struct = json.loads(request.form['struct'])
     image = mnist.test.images[index]
     label = mnist.test.labels[index]
-
     data = {}
     data['label'] = np.argmax(label)
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))

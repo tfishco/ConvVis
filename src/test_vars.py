@@ -45,4 +45,4 @@ def conv(x):
 
     fc_decision_data = tf.nn.softmax(y_conv)
 
-    return y_conv, [W_conv1, b_conv1, W_conv2, b_conv2, W_fc1, b_fc1, W_fc2, b_fc2], [x_image, h_conv1, h_pool1, h_conv2, h_pool2, h_pool2_flat, h_fc1, h_fc1_drop, fc_decision_data]
+    return [W_conv1, b_conv1, W_conv2, b_conv2, W_fc1, b_fc1, W_fc2, b_fc2], [x_image, h_conv1, h_pool1, h_conv2, h_pool2, h_pool2_flat, h_fc1, h_fc1_drop, fc_decision_data]
