@@ -4,10 +4,6 @@
   font-family: 'Lato', sans-serif;
 }
 
-.node {
-    stroke: #4FC278;
-    stroke-width: 1.5px;
-}
 .link {
     stroke: #999;
     stroke-opacity: .6;
@@ -30,6 +26,13 @@ div.tooltip {
   background-color: #ececec;
 }
 
+.sb-left {
+  left: 0;
+}
+
+.sb-right {
+  right: 0;
+}
 .sidebar {
   position: fixed;
   background-color: #ddd;
@@ -37,11 +40,10 @@ div.tooltip {
   /*background-color: orangered;*/
   height: 700px;
   width: 200px;
-  right: 0;
 }
 
 .sidebarContainer {
-  width: 50%;
+  width: 55%;
   margin: 50px auto;
 }
 

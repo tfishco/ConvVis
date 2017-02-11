@@ -3,22 +3,31 @@ import numpy as np
 #struct = [1,32,32,64,64,3136,1024,10] fully connected
 #struct = [1,32,32,64,64,1]
 
-def get_json(struct):
+def get_json(struct, value):
     main = {}
     nodes = []
     links = []
     # Nodes
+    pixel_count = 60
+    value_count = 0
     for i in range(len(struct)):
         for j in range(struct[i]):
             node = {}
             node['name'] = str(i) + '_' + str(j)
-            if i % (len(struct) - 1) == 0:
+            if i == 0 or i == len(struct) - 2:
                 node['fixed'] = True
                 node['y'] = 330
                 if i == 0:
-                    node['x'] = 50
+                    node['x'] = 210
                 else:
                     node['x'] = 1000
+            elif i == len(struct) - 1:
+                pixel_count += 50
+                node['fixed'] = True
+                node['y'] = pixel_count
+                node['x'] = 1150
+                node['value'] = value[value_count]
+                value_count += 1
             nodes.append(node)
     # Links
     for i in range(len(struct)):
@@ -55,6 +64,12 @@ def get_json(struct):
                 link = {}
                 link['source'] = j + struct[i - 1] + struct[i]
                 link['target'] = 193
+                links.append(link)
+        if i == 5:
+            for j in range(1,struct[i + 1] + 1):
+                link = {}
+                link['source'] = 193
+                link['target'] = 193 + j
                 links.append(link)
 
     main['nodes'] = nodes

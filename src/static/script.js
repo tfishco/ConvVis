@@ -1,12 +1,16 @@
 function gen_graph(data) {
 
-  var width = 1075,
+  var width = 1275,
       height = 660;
 
   var color = d3.scale.category20();
 
   var force = d3.layout.force()
-      .charge(-150)
+      .charge(function(d){
+        var charge = -100;
+        if (d.index === 0) charge = 10 * charge;
+        return charge;
+      })
       .linkDistance(30)
       .size([width, height]);
 
@@ -39,39 +43,43 @@ function gen_graph(data) {
 
   var node = svg.selectAll(".node")
       .data(graph.nodes)
-      .enter().append("circle")
+      .enter().append("g")
       .attr("class", "node")
-      .attr("r", 8)
-      .style("fill", "#FCFCFC")
+    /*  .attr("r", function (d) {
+        if(d3.select(this)["0"]["0"].__data__.index < 194) {
+          return 6;
+        } else {
+          var val = d3.select(this)["0"]["0"].__data__.value * 25;
+          if (val < 2) {
+            return 2;
+          } else {
+            return val;
+          }
+        }
+      })*/
+      //.style("fill", "#FCFCFC")
       .call(force.drag)
-      .on('click', nodeClick);
+      .on('click', nodeClick)
       //.on('mouseover', tip.show) //Added
       //.on('mouseout', tip.hide) //Added
-      //.on('dblclick', connectedNodes);
+      .on('dblclick', connectedNodes);
       //.on('click', updateImage)
 
+  node.append("image")
+      .attr("xlink:href", "https://github.com/favicon.ico")
+      .attr("x",-8)
+      .attr("y",-8)
+      .attr("width", 16)
+      .attr("height", 16);
 
-  force.on("tick", function () {
-      link.attr("x1", function (d) {
-          return d.source.x;
-      })
-          .attr("y1", function (d) {
-          return d.source.y;
-      })
-          .attr("x2", function (d) {
-          return d.target.x;
-      })
-          .attr("y2", function (d) {
-          return d.target.y;
-      });
+      force.on("tick", function() {
+        link.attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
 
-      node.attr("cx", function (d) {
-          return d.x;
-      })
-          .attr("cy", function (d) {
-          return d.y;
+        node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
       });
-  });
 
   var toggle = 0;
 
@@ -107,22 +115,6 @@ function gen_graph(data) {
       }
   }
 
-  var color = d3.scale.linear().domain([1,60])
-      .interpolate(d3.interpolateHcl)
-      .range([d3.rgb('#edf8b1'), d3.rgb('#2c7fb8')]);
-      //['#edf8b1','#7fcdbb','#2c7fb8']
-
-  var count = 0
-  for (i = 1; i <= 6; i++) {
-    for (j = 0; j < data.no_nodes[i - 1]; j++){
-      var brightness = data.convdata.features[i]["" + data.no_nodes[i - 1] + ""][j];
-      d3.select(d3.selectAll(".node"))[0][0][0][count].style.fill = color(brightness);
-      //d3.select(d3.selectAll(".node"))[0][0][0][count].style.brightness = brightness;
-      //d3.select(d3.selectAll(".node"))[0][0][0][count].style.opacity = (brightness/50);
-      count += 1;
-    }
-  }
-
   function nodeClick() {
 
     var image_ref = d3.select(this)[0][0].__data__.name.split("_");
@@ -147,5 +139,7 @@ function gen_graph(data) {
     document.getElementById("image-width").innerHTML = width;
 
   }
+
+  force.start();
 
 }
