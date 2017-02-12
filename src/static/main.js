@@ -1,5 +1,5 @@
 var p = document.getElementById("net-struct");
-var struct = [1,32,32,64,64,1];
+var struct = [1,32,32,64,64,1,10];
 p.value = JSON.stringify(struct);
 
 var convData;
