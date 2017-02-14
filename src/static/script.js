@@ -204,6 +204,32 @@ function gen_graph(data) {
     }
   }
 
+  function nodeClick() {
+
+    var image_ref = d3.select(this)[0][0].__data__.name.split("_");
+
+    var raw = data.convdata.features[(parseInt(image_ref[0]) + 1)][image_ref[1]]
+      ["feature_" + parseInt(image_ref[1])];
+
+    var buffer = new Uint8ClampedArray(raw);
+
+    var width = Math.sqrt(raw.length / 4),
+      height = Math.sqrt(raw.length / 4);
+
+    var canvas = document.getElementById('image'),
+      ctx = canvas.getContext('2d');
+
+    canvas.width = width;
+    canvas.height = height;
+    var idata = ctx.createImageData(width, height);
+    idata.data.set(buffer);
+    ctx.putImageData(idata, 0, 0);
+
+    document.getElementById("image-height").innerHTML = height;
+    document.getElementById("image-width").innerHTML = width;
+
+  }
+
   force.start();
 
 }
