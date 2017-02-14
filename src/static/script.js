@@ -48,8 +48,12 @@ function gen_graph(data) {
       var image_ref = d.name.split("_");
       if (image_ref[0] < 5) {
         return "node-image";
+      } else if (image_ref[0] == 5) {
+        return "node-fc1";
+      } else if (image_ref[0] == 6) {
+        return "node-fc2";
       } else {
-        return "node-plain";
+        return "node-decision";
       }
     })
     .call(force.drag)
@@ -64,7 +68,7 @@ function gen_graph(data) {
     })
     .call(populateNodes);
 
-  var plainNode = d3.selectAll(".node-plain")
+  var decisionNode = d3.selectAll(".node-decision")
     .append("circle")
     .attr("class", "circle-node")
     .attr("r", function(d) {
@@ -90,6 +94,22 @@ function gen_graph(data) {
       }
     });
 
+  var nodeFc1 = d3.selectAll(".node-fc1")
+    .append("rect")
+    .attr("width", 50)
+    .attr("height", 600)
+    .style("fill", "white")
+    .style("stroke", "orangered")
+    .style("stroke-width", 1);
+
+  var nodeFc1 = d3.selectAll(".node-fc2")
+    .append("rect")
+    .attr("width", 50)
+    .attr("height", 500)
+    .style("fill", "white")
+    .style("stroke", "orangered")
+    .style("stroke-width", 1);
+
   force.on("tick", function() {
     link.attr("x1", function(d) {
         return d.source.x;
@@ -105,6 +125,13 @@ function gen_graph(data) {
       });
 
     node.attr("transform", function(d) {
+      if (d.name.split("_")[0] == 5 || d.name.split("_")[0] == 6) {
+        var halfY = d3.select(this)["0"]["0"].childNodes["0"].height.baseVal
+          .value / 2;
+        var halfX = d3.select(this)["0"]["0"].childNodes["0"].width.baseVal
+          .value / 2
+        return "translate(" + (d.x - halfX) + "," + (d.y - halfY) + ")";
+      }
       return "translate(" + d.x + "," + d.y + ")";
     });
   });
