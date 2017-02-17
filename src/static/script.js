@@ -38,12 +38,23 @@ function gen_graph(data) {
     .enter().append("line")
     .attr("class", "link")
     .style("stroke-width", function(d) {
+      console.log(d);
+      source_ref = d.source.name.split("_");
+      target_ref = d.target.name.split("_");
+      if (target_ref[0] == 5) {
+        layer_index = source_ref[1];
+        return data.weightdata.fc1[layer_index];
+      }
       return Math.sqrt(d.value);
     });
 
+  var startX = 10
   var node = svg.selectAll(".node")
     .data(graph.nodes)
     .enter().append("g")
+    .call(function(d) {
+      console.log(d)
+    })
     .attr("class", function(d) {
       var image_ref = d.name.split("_");
       if (image_ref[0] < 5) {
@@ -56,7 +67,13 @@ function gen_graph(data) {
         return "node-decision";
       }
     })
+    .attr('x', function(d) {
+      startX += 45;
+      console.log(startX);
+      return startX;
+    })
     .call(force.drag)
+    .on('click', nodeClick)
     .on('dblclick', connectedNodes);
 
   var image = d3.selectAll(".node-image")
@@ -86,7 +103,6 @@ function gen_graph(data) {
     })
     .attr("fill", function(d) {
       var image_ref = d.name.split("_");
-      console.log(d.index, data.label);
       if (image_ref[1] == data.convdata.prediction) {
         return 'orangered';
       } else {
@@ -97,7 +113,7 @@ function gen_graph(data) {
   var nodeFc1 = d3.selectAll(".node-fc1")
     .append("rect")
     .attr("width", 50)
-    .attr("height", 600)
+    .attr("height", 500)
     .style("fill", "white")
     .style("stroke", "orangered")
     .style("stroke-width", 1);
@@ -105,7 +121,7 @@ function gen_graph(data) {
   var nodeFc1 = d3.selectAll(".node-fc2")
     .append("rect")
     .attr("width", 50)
-    .attr("height", 500)
+    .attr("height", 300)
     .style("fill", "white")
     .style("stroke", "orangered")
     .style("stroke-width", 1);

@@ -48,8 +48,11 @@ def get_feature_map(layer, image_size, channels):
     temp_image = temp_image.transpose((2, 0, 1))
     return temp_image.reshape((-1, image_size, image_size, 1))
 
-#features = [x_image, h_conv1, h_pool1, h_conv2, h_pool2, h_pool2_flat, h_fc1, h_fc1_drop, fc_decision_data]\
+#features = [x_image, h_conv1, h_pool1, h_conv2, h_pool2, h_pool2_flat, h_fc1, h_fc1_drop, fc_decision_data]
 #               0        1        2         3       4           5         6         7               8
+
+#weights = [W_conv1, b_conv1, W_conv2, b_conv2, W_fc1, b_fc1, W_fc2, b_fc2]
+#               0       1        2         3       4      5     6       7
 
 def get_conv_data(feature_list):
     features = {}
@@ -60,8 +63,6 @@ def get_conv_data(feature_list):
     features['5'], max5 = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[4], 7, 64), 255), decimals=0))
     features['6'], max6 = get_feature_json([np.round(np.multiply(feature_list[6], 255), decimals=0)])
 
-
-
     data = {}
     data['features'] = features
     data['prediction'] = np.argmax(feature_list[8])
@@ -69,6 +70,20 @@ def get_conv_data(feature_list):
     data['log_certainty'] = np.log1p(np.array(feature_list[8])).squeeze().tolist()
     data['max_brightness'] = np.amax([max1,max2,max3,max4,max5,max6]).tolist()
     return data
+
+def get_weight_data(weights_list):
+    data = {}
+    data['fc1'] = get_fc1_sum(weights_list[4].tolist(), 7*7)
+    return data
+
+def get_fc1_sum(weight_list, area):
+    pixel_weights = []
+    for i in range(0,len(weight_list),area):
+        image_weights = []
+        for j in range(area):
+            image_weights.append(np.sum(np.array(weight_list[i + j])))
+        pixel_weights.append(np.sum(np.array(image_weights)))
+    return np.divide(np.absolute(np.array(pixel_weights)),8).tolist()
 
 x = tf.placeholder("float", [784])
 
@@ -94,6 +109,7 @@ def conv():
 
     data = {}
     data['label'] = np.argmax(label)
+    data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
     data['struct'], data['no_nodes'] = network_json.get_json(struct, data['convdata']['log_certainty'])
     return json.dumps(data)
