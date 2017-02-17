@@ -74,3 +74,12 @@ div.tooltip {
 #dimension {
   text-align: center;
 }
+
+.node-image {
+  border-radius: 50%;
+}
+
+.circle-node {
+  stroke: orangered;
+  stroke-width: 1.5px;
+}
