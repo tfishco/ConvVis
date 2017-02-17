@@ -83,3 +83,13 @@ div.tooltip {
   stroke: orangered;
   stroke-width: 1.5px;
 }
+
+#weightThreshold {
+  width: 110px;
+  margin-top: 20px;
+}
+
+#thresholdContainer{
+  margin-top: 20px;
+  font-size: x-small;
+}
