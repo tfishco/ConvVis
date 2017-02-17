@@ -10,30 +10,30 @@ def get_json(struct, value):
     # Nodes
     pixel_count = 60
     value_count = 0
+    gap = 25
     for i in range(len(struct)):
         for j in range(struct[i]):
             node = {}
             node['name'] = str(i) + '_' + str(j)
             if i == 0 or i == len(struct) - 2:
-                node['fixed'] = True
                 node['y'] = 330
                 if i == 0:
                     node['x'] = 210
                 else:
                     node['x'] = 1000
+                node['fixed'] = True
             elif i == len(struct) - 1:
                 pixel_count += 50
-                node['fixed'] = True
                 node['y'] = pixel_count
                 node['x'] = 1200
                 node['value'] = value[value_count]
+                node['fixed'] = True
                 value_count += 1
             elif i==len(struct) - 3:
-                node['fixed'] = True
                 node['y'] = 330
                 node['x'] = 900
+                node['fixed'] = True
             nodes.append(node)
-
 
     # Links
     for i in range(len(struct)):
