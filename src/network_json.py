@@ -3,6 +3,27 @@ import numpy as np
 #struct = [1,32,32,64,64,3136,1024,10] fully connected
 #struct = [1,32,32,64,64,1,1,10]
 
+def get_coords(vert_size_gap, horiz_size_gap, no_columns, layers, layers_size):
+    y_offset = 50
+    x_offset = 250
+    dx = x_offset
+    dy = y_offset
+    layer_offset = 50
+    x_vals = []
+    y_vals = []
+    for i in range(len(layers)):
+        no_rows = layers[i] / no_columns
+        for j in range(layers[i]):
+            if j % (no_rows) == 0:
+                dx += horiz_size_gap + layers_size[i]
+                dy = y_offset
+            else :
+                dy += vert_size_gap + layers_size[i]
+            x_vals.append(dx)
+            y_vals.append(dy)
+        dx += layer_offset
+    return x_vals, y_vals
+
 def get_json(struct, value):
     main = {}
     nodes = []
@@ -10,7 +31,8 @@ def get_json(struct, value):
     # Nodes
     pixel_count = 60
     value_count = 0
-    gap = 25
+    count = 0
+    x_vals, y_vals = get_coords(25, 15, 4, [32,32,64,64], [28,14,14,7])
     for i in range(len(struct)):
         for j in range(struct[i]):
             node = {}
@@ -20,7 +42,7 @@ def get_json(struct, value):
                 if i == 0:
                     node['x'] = 210
                 else:
-                    node['x'] = 1000
+                    node['x'] = 1100
                 node['fixed'] = True
             elif i == len(struct) - 1:
                 pixel_count += 50
@@ -31,8 +53,13 @@ def get_json(struct, value):
                 value_count += 1
             elif i==len(struct) - 3:
                 node['y'] = 330
-                node['x'] = 900
+                node['x'] = 1000
                 node['fixed'] = True
+            else:
+                node['x'] = x_vals[count]
+                node['y'] = y_vals[count]
+                node['fixed'] = True
+                count += 1
             nodes.append(node)
 
     # Links
