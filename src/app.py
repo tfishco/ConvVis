@@ -54,6 +54,7 @@ def get_feature_map(layer, image_size, channels):
 #weights = [W_conv1, b_conv1, W_conv2, b_conv2, W_fc1, b_fc1, W_fc2, b_fc2]
 #               0       1        2         3       4      5     6       7
 
+
 def get_conv_data(feature_list):
     features = {}
     features['1'], max1 = get_feature_json(np.array(np.round(np.multiply(feature_list[0], 255), decimals=0).tolist()))
@@ -93,6 +94,8 @@ with tf.variable_scope("conv"):
     variables, features = test_vars.conv(x)
 saver = tf.train.Saver(variables)
 saver.restore(sess, "pre-trained/mnist/graph/mnist.ckpt")
+
+
 
 app = Flask(__name__)
 
