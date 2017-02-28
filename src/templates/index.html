@@ -35,10 +35,13 @@
             Actual:
             <span id="actual"></span>
           </div>
-          <input type="range" id="weightThreshold" value="90">
+          <div id="thresholdContainer">
+            Weight Threshold:<span id="weightThresholdDisplay"></span>
+            <input type="range" id="weightThreshold" value="90">
+          </div>
         </div>
       </div>
-      <div class="canvas"></div>
+      <div class="canvas" id="canvasid"></div>
     </div>
     <script src="static/script.js"></script>
     <script src="static/main.js"></script>
