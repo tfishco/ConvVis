@@ -41,11 +41,7 @@ function gen_graph(data) {
     .style("stroke-width", function(d) {
       source_ref = d.source.name.split("_");
       target_ref = d.target.name.split("_");
-      if (target_ref[0] == 5) {
-        layer_index = source_ref[1];
-        return data.weightdata.fc1[layer_index];
-      }
-      return Math.sqrt(d.value);
+      return data.weightdata.fc1[source_ref[1]];
     });
 
   var node = svg.selectAll(".node")

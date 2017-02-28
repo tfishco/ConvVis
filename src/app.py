@@ -6,8 +6,11 @@ import random
 import numpy as np
 import json
 import network_json
-import test_vars
 import sys
+
+sys.path.insert(0, 'pre-trained/mnist/')
+
+import classifier
 
 mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
 
@@ -91,11 +94,9 @@ x = tf.placeholder("float", [784])
 sess = tf.Session()
 
 with tf.variable_scope("conv"):
-    variables, features = test_vars.conv(x)
+    _, variables, features = classifier.conv(x, 1.0)
 saver = tf.train.Saver(variables)
 saver.restore(sess, "pre-trained/mnist/graph/mnist.ckpt")
-
-
 
 app = Flask(__name__)
 

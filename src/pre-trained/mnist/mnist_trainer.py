@@ -2,7 +2,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 import tensorflow as tf
 import os
 import inspect
-import train_graph
+import classifier
 
 mnist = input_data.read_data_sets('/src/resource/MNIST_data', one_hot=True)
 
@@ -27,7 +27,7 @@ with tf.Session() as sess:
     sess.run(init_op)
     for i in range(100):
         batch = mnist.train.next_batch(50)
-        if i%100 == 0:
+        if i % 100 == 0:
             train_accuracy = accuracy.eval(feed_dict={
                 x:batch[0], y_: batch[1], keep_prob: 1.0})
             print("step %d, training accuracy %g"%(i, train_accuracy))
