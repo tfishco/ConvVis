@@ -36,14 +36,14 @@
             <span id="actual"></span>
           </div>
           <div id="thresholdContainer">
-            Weight Threshold:<span id="weightThresholdDisplay"></span>
-            <input type="range" id="weightThreshold" value="90">
-            <span id="threshold-id"></span>
+            Weight Threshold:<input id='weightThresholdValue' type="text" value="500" oninput="sliderChange('weightThreshold',this.value)">
+            <input type="range" id="weightThreshold" min="0" max="1000" value="500" step="10" oninput="sliderChange('weightThresholdValue',this.value);">
           </div>
         </div>
       </div>
       <div class="canvas" id="canvasid"></div>
     </div>
+    <script src="static/slider.js"></script>
     <script src="static/script.js"></script>
     <script src="static/main.js"></script>
   </body>
