@@ -11,7 +11,7 @@ sess = tf.Session()
 with tf.variable_scope("conv"):
     x = tf.placeholder(tf.float32, [None, 784])
     keep_prob = tf.placeholder(tf.float32)
-    y_conv, variables = train_graph.conv(x,keep_prob)
+    y_conv, variables, _ = classifier.conv(x,keep_prob)
 
 y_ = tf.placeholder(tf.float32, [None,10])
 
