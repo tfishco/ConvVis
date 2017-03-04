@@ -38,11 +38,43 @@ function gen_graph(data) {
     .data(graph.links)
     .enter().append("line")
     .attr("class", "link")
-    .style("stroke-width", function(d) {
+    /*.style("stroke-width", function(d) {
       source_ref = d.source.name.split("_");
       target_ref = d.target.name.split("_");
-      return data.weightdata.fc1[source_ref[1]];
-    });
+      if(parseInt(source_ref[0]) == 4){
+        return data.weightdata.fc1[source_ref[1]];
+      } else if(parseInt(source_ref[0]) == 3) {
+        return data.weightdata.fc1[source_ref[1]];
+      }
+      return 0;
+    });*/
+    .call(linkWidth);
+
+  function linkWidth() {
+    var links = svg.selectAll(".link")["0"];
+    var lastIndex = 63 + 64;
+    for (i = links.length - 1; i >= 0; i--) {
+      var link_data = links[i].__data__;
+      var src = link_data.source.name.split("_");
+      var tgt = link_data.target.name.split("_");
+      if (parseInt(src[0]) == 4 || parseInt(src[0]) == 3) {
+        links[i].setAttribute("stroke-width", data.weightdata.fc1[src[1]]);
+      } else if (parseInt(src[0]) == 2) {
+        links[i].setAttribute("stroke-width", links[i + 32].getAttribute(
+          "stroke-width"));
+      } else if (parseInt(src[0]) == 1) {
+        console.log(i, lastIndex, lastIndex - 1);
+        links[i].setAttribute("stroke-width",
+          parseFloat(links[lastIndex].getAttribute(
+            "stroke-width")) + parseFloat(links[lastIndex - 1].getAttribute(
+            "stroke-width")));
+        lastIndex -= 2;
+      } else if (parseInt(src[0]) == 0) {
+        links[i].setAttribute("stroke-width", links[i + 32].getAttribute(
+          "stroke-width"));
+      }
+    }
+  }
 
   var node = svg.selectAll(".node")
     .data(graph.nodes)
@@ -76,7 +108,8 @@ function gen_graph(data) {
       if (parseInt(image_ref[0]) < 7) {
         return 2;
       } else {
-        var val = data.convdata.log_certainty[parseInt(image_ref[1])] * 25
+        var val = data.convdata.log_certainty[parseInt(image_ref[1])] *
+          25
         if (val < 2) {
           return 2;
         } else {
@@ -167,7 +200,8 @@ function gen_graph(data) {
       });
 
       link.style("opacity", function(o) {
-        return d.index == o.source.index | d.index == o.target.index ? 1 :
+        return d.index == o.source.index | d.index == o.target.index ?
+          1 :
           0.1;
       });
 
@@ -183,8 +217,10 @@ function gen_graph(data) {
 
     var image_ref = d3.select(this)[0][0].__data__.name.split("_");
 
-    var raw = data.convdata.features[(parseInt(image_ref[0]) + 1)][image_ref[
-        1]]
+    var raw = data.convdata.features[(parseInt(image_ref[0]) + 1)][
+        image_ref[
+          1]
+      ]
       ["feature_" + parseInt(image_ref[1])];
 
     var buffer = new Uint8ClampedArray(raw);
