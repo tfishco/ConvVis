@@ -34,21 +34,40 @@ function gen_graph(data) {
     .links(graph.links)
     .start();
 
+  var linkopacity = d3.scale.linear().domain([0, Math.max.apply(Math, data.weightdata
+      .fc1)])
+    .range([0, 1]);
+
   var link = svg.selectAll(".link")
     .data(graph.links)
     .enter().append("line")
     .attr("class", "link")
-    /*.style("stroke-width", function(d) {
-      source_ref = d.source.name.split("_");
-      target_ref = d.target.name.split("_");
-      if(parseInt(source_ref[0]) == 4){
-        return data.weightdata.fc1[source_ref[1]];
-      } else if(parseInt(source_ref[0]) == 3) {
-        return data.weightdata.fc1[source_ref[1]];
-      }
-      return 0;
-    });*/
-    .call(linkWidth);
+    .call(linkWidth)
+    .attr("stroke", "orangered")
+    .attr("opacity", 0.6);
+
+  d3.select("#weightThreshold").on("input", function() {
+    update(+this.value);
+  });
+
+  update(0);
+
+  function update(val) {
+
+    d3.select("#weightThresholdValue").text(val);
+    d3.select("#weightThreshold").property("value", val);
+    svg.selectAll(".link")
+      .attr("opacity", function(d) {
+        if (d.target.name.split("_")[0] == '5') {
+          var op = linkopacity(this.getAttribute("stroke-width"))
+          if (val < op) {
+            return op;
+          } else {
+            return 0;
+          }
+        }
+      });
+  }
 
   function linkWidth() {
     var links = svg.selectAll(".link")["0"];
@@ -57,19 +76,18 @@ function gen_graph(data) {
       var link_data = links[i].__data__;
       var src = link_data.source.name.split("_");
       var tgt = link_data.target.name.split("_");
-      if (parseInt(src[0]) == 4 || parseInt(src[0]) == 3) {
+      if (src[0] == '4' || src[0] == '3') {
         links[i].setAttribute("stroke-width", data.weightdata.fc1[src[1]]);
-      } else if (parseInt(src[0]) == 2) {
+      } else if (src[0] == '2') {
         links[i].setAttribute("stroke-width", links[i + 32].getAttribute(
           "stroke-width"));
-      } else if (parseInt(src[0]) == 1) {
-        console.log(i, lastIndex, lastIndex - 1);
+      } else if (src[0] == '1') {
         links[i].setAttribute("stroke-width",
           parseFloat(links[lastIndex].getAttribute(
             "stroke-width")) + parseFloat(links[lastIndex - 1].getAttribute(
             "stroke-width")));
         lastIndex -= 2;
-      } else if (parseInt(src[0]) == 0) {
+      } else if (src[0] == '0') {
         links[i].setAttribute("stroke-width", links[i + 32].getAttribute(
           "stroke-width"));
       }
