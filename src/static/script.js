@@ -8,8 +8,9 @@ function gen_graph(data) {
 
   d3.select("#weightThreshold").on("input", function() {
     update(document.getElementById("weightThreshold").value);
-    document.getElementById("weightThresholdValue").innerHTML = document.getElementById(
-      "weightThreshold").value;
+    document.getElementById("weightThresholdValue").innerHTML = " " +
+      document.getElementById(
+        "weightThreshold").value;
   });
 
   var width = 1275,
@@ -73,7 +74,7 @@ function gen_graph(data) {
   update(0);
 
   function update(val) {
-    d3.select("#weightThresholdValue").text(val);
+    d3.select("#weightThresholdValue").text(" " + val);
     d3.select("#weightThreshold").property("value", val);
     svg.selectAll(".link")
       .attr("opacity", function(d) {
