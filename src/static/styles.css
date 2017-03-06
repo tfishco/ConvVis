@@ -5,7 +5,7 @@
 }
 
 .link {
-    stroke-opacity: .6;
+    stroke-opacity: .5;
 }
 
 div.tooltip {
@@ -91,4 +91,8 @@ div.tooltip {
 #thresholdContainer{
   margin-top: 20px;
   font-size: x-small;
+}
+
+#title{
+  width: 120px;
 }

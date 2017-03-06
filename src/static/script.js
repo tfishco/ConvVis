@@ -1,6 +1,16 @@
 function gen_graph(data) {
 
-  var toRemove = d3.selectAll("svg").remove();
+  function reset() {
+    d3.selectAll("svg").remove();
+  }
+
+  reset();
+
+  d3.select("#weightThreshold").on("input", function() {
+    update(document.getElementById("weightThreshold").value);
+    document.getElementById("weightThresholdValue").innerHTML = document.getElementById(
+      "weightThreshold").value;
+  });
 
   var width = 1275,
     height = 660;
@@ -45,11 +55,22 @@ function gen_graph(data) {
     .call(linkWidth)
     .attr("stroke", "orangered");
 
-  update(0);
+  var node = svg.selectAll(".node")
+    .data(graph.nodes)
+    .enter().append("g")
+    .attr("class", function(d) {
+      var image_ref = d.name.split("_");
+      if (image_ref[0] < 5) {
+        return "node-image";
+      } else {
+        return "node-decision";
+      }
+    })
+    .call(force.drag)
+    .on('click', nodeClick)
+    .on('dblclick', connectedNodes);
 
-  d3.select("#weightThreshold").on("input", function() {
-    update(this.value);
-  });
+  update(0);
 
   function update(val) {
     d3.select("#weightThresholdValue").text(val);
@@ -57,12 +78,16 @@ function gen_graph(data) {
     svg.selectAll(".link")
       .attr("opacity", function(d) {
         var op;
+        if (parseInt(d.target.name.split("_")[0]) == 7) {
+          // Final layer weights
+        }
         if (parseInt(d.target.name.split("_")[0]) <= 5) {
           op = linkopacity(this.getAttribute("stroke-width"));
+          console.log("val", val, "op", op);
           if (val < op) {
-            return op;
+            return 1;
           } else {
-            return 0;
+            return 0.1;
           }
         }
       });
@@ -98,21 +123,6 @@ function gen_graph(data) {
       }
     }
   }
-
-  var node = svg.selectAll(".node")
-    .data(graph.nodes)
-    .enter().append("g")
-    .attr("class", function(d) {
-      var image_ref = d.name.split("_");
-      if (image_ref[0] < 5) {
-        return "node-image";
-      } else {
-        return "node-decision";
-      }
-    })
-    .call(force.drag)
-    .on('click', nodeClick)
-    .on('dblclick', connectedNodes);
 
   var image = d3.selectAll(".node-image")
     .append("image")
@@ -178,8 +188,6 @@ function gen_graph(data) {
     linkedByIndex[d.source.index + "," + d.target.index] = 1;
   });
 
-  console.log(linkedByIndex);
-
   function populateNodes() {
     var nodes = d3.selectAll("image")[0];
     for (i = 0; i < nodes.length; i++) {
@@ -220,22 +228,23 @@ function gen_graph(data) {
     if (toggle == 0) {
       d3.select(this).fixed = true;
       d = d3.select(this).node().__data__;
-      node.style("opacity", function(o) {
+      node.attr("opacity", function(o) {
         return neighboring(d, o) | neighboring(o, d) ? 1 : 0.1;
       });
-
-      link.style("opacity", function(o) {
+      link.attr("opacity", function(o) {
         return d.index == o.source.index | d.index == o.target.index ?
           1 :
           0.1;
       });
-
       toggle = 1;
     } else {
-      node.style("opacity", 1);
-      link.style("opacity", 1);
+      node.attr("opacity", 1);
+      update(document.getElementById("weightThreshold").value);
+      console.log(document.getElementById("weightThreshold").value);
       toggle = 0;
     }
+    //console.log(document.getElementById("weightThreshold").value);
+    //update(document.getElementById("weightThreshold").value);
   }
 
   function nodeClick() {
