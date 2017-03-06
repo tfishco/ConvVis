@@ -1,6 +1,6 @@
 function gen_graph(data) {
 
-  var toRemove = d3.selectAll("svg").remove()
+  var toRemove = d3.selectAll("svg").remove();
 
   var width = 1275,
     height = 660;
@@ -36,30 +36,29 @@ function gen_graph(data) {
 
   var linkopacity = d3.scale.linear().domain([0, Math.max.apply(Math, data.weightdata
       .fc1)])
-    .range([0, 1]);
+    .range([0, 1.0]);
 
   var link = svg.selectAll(".link")
     .data(graph.links)
     .enter().append("line")
     .attr("class", "link")
     .call(linkWidth)
-    .attr("stroke", "orangered")
-    .attr("opacity", 0.6);
-
-  d3.select("#weightThreshold").on("input", function() {
-    update(+this.value);
-  });
+    .attr("stroke", "orangered");
 
   update(0);
 
-  function update(val) {
+  d3.select("#weightThreshold").on("input", function() {
+    update(this.value);
+  });
 
+  function update(val) {
     d3.select("#weightThresholdValue").text(val);
     d3.select("#weightThreshold").property("value", val);
     svg.selectAll(".link")
       .attr("opacity", function(d) {
-        if (d.target.name.split("_")[0] == '5') {
-          var op = linkopacity(this.getAttribute("stroke-width"))
+        var op;
+        if (parseInt(d.target.name.split("_")[0]) <= 5) {
+          op = linkopacity(this.getAttribute("stroke-width"));
           if (val < op) {
             return op;
           } else {
@@ -79,13 +78,19 @@ function gen_graph(data) {
       if (src[0] == '4' || src[0] == '3') {
         links[i].setAttribute("stroke-width", data.weightdata.fc1[src[1]]);
       } else if (src[0] == '2') {
-        links[i].setAttribute("stroke-width", links[i + 32].getAttribute(
-          "stroke-width"));
+        links[i].setAttribute("stroke-width", data.weightdata.fc1[tgt[1]]);
       } else if (src[0] == '1') {
-        links[i].setAttribute("stroke-width",
-          parseFloat(links[lastIndex].getAttribute(
-            "stroke-width")) + parseFloat(links[lastIndex - 1].getAttribute(
-            "stroke-width")));
+        if (parseFloat(links[lastIndex].getAttribute(
+            "stroke-width")) > parseFloat(links[lastIndex - 1].getAttribute(
+            "stroke-width"))) {
+          links[i].setAttribute("stroke-width",
+            parseFloat(links[lastIndex].getAttribute(
+              "stroke-width")));
+        } else {
+          links[i].setAttribute("stroke-width",
+            parseFloat(links[lastIndex - 1].getAttribute(
+              "stroke-width")));
+        }
         lastIndex -= 2;
       } else if (src[0] == '0') {
         links[i].setAttribute("stroke-width", links[i + 32].getAttribute(
@@ -172,6 +177,8 @@ function gen_graph(data) {
   graph.links.forEach(function(d) {
     linkedByIndex[d.source.index + "," + d.target.index] = 1;
   });
+
+  console.log(linkedByIndex);
 
   function populateNodes() {
     var nodes = d3.selectAll("image")[0];
