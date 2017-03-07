@@ -80,16 +80,17 @@ function gen_graph(data) {
       .attr("opacity", function(d) {
         var op;
         if (parseInt(d.target.name.split("_")[0]) == 7) {
-          // Final layer weights
-        }
-        if (parseInt(d.target.name.split("_")[0]) <= 5) {
+          console.log(d.target.value);
+          op = d.target.value * 3.5;
+        } else if (parseInt(d.target.name.split("_")[0]) == 6) {
+          op = 1;
+        } else if (parseInt(d.target.name.split("_")[0]) <= 5) {
           op = linkopacity(this.getAttribute("stroke-width"));
-          console.log("val", val, "op", op);
-          if (val < op) {
-            return 1;
-          } else {
-            return 0.1;
-          }
+        }
+        if (val <= op) {
+          return 1;
+        } else {
+          return 0.2;
         }
       });
   }
@@ -244,8 +245,6 @@ function gen_graph(data) {
       console.log(document.getElementById("weightThreshold").value);
       toggle = 0;
     }
-    //console.log(document.getElementById("weightThreshold").value);
-    //update(document.getElementById("weightThreshold").value);
   }
 
   function nodeClick() {
