@@ -39,11 +39,11 @@ def get_json(struct, value):
             node['name'] = str(i) + '_' + str(j)
             if i == 0 or i == len(struct) - 2:
                 node['y'] = 330
+                node['fixed'] = True
                 if i == 0:
                     node['x'] = 210
                 else:
                     node['x'] = 1100
-                node['fixed'] = True
             elif i == len(struct) - 1:
                 pixel_count += 50
                 node['y'] = pixel_count

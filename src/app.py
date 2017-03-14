@@ -81,12 +81,18 @@ def get_weight_data(weights_list):
 
 def get_fc1_sum(weight_list, area):
     pixel_weights = []
+    data = {}
     for i in range(0,len(weight_list),area):
         image_weights = []
         for j in range(area):
             image_weights.append(np.sum(np.array(weight_list[i + j])))
         pixel_weights.append(np.sum(np.array(image_weights)))
-    return np.divide(np.absolute(np.array(pixel_weights)),8).tolist()
+    data['abs'] = np.divide(np.absolute(np.array(pixel_weights)),8).tolist()
+    data['raw'] = np.divide(np.array(pixel_weights),8).tolist()
+
+    return data
+
+
 
 x = tf.placeholder("float", [784])
 
