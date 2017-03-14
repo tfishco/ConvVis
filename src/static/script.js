@@ -1,7 +1,7 @@
 function gen_graph(data) {
 
-  //var weightType = "raw";
-  var weightType = "abs";
+  var weightType = "raw";
+  //var weightType = "abs";
 
   function reset() {
     d3.selectAll("svg").remove();

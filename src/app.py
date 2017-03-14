@@ -8,7 +8,7 @@ import json
 import network_json
 import sys
 
-sys.path.insert(0, 'pre-trained/mnist/')
+sys.path.insert(0, 'pre-trained/')
 
 import classifier
 
@@ -98,10 +98,12 @@ x = tf.placeholder("float", [784])
 
 sess = tf.Session()
 
+train_iteration = 600
+
 with tf.variable_scope("conv"):
     _, variables, features = classifier.conv(x, 1.0)
 saver = tf.train.Saver(variables)
-saver.restore(sess, "pre-trained/mnist/graph/mnist.ckpt")
+saver.restore(sess, "pre-trained/mnist/graph_mnist" + str(train_iteration) + "/mnist.ckpt")
 
 app = Flask(__name__)
 
