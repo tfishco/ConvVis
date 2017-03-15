@@ -24,7 +24,7 @@ def get_coords(vert_size_gap, horiz_size_gap, no_columns, layers, layers_size):
         dx += layer_offset
     return x_vals, y_vals
 
-def get_json(struct, value):
+def get_json(struct, value, seperate_conv):
     main = {}
     nodes = []
     links = []

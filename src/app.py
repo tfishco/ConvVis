@@ -1,8 +1,8 @@
-from __future__ import print_function
 import tensorflow as tf
 from flask import Flask, render_template, request, send_file
 from tensorflow.examples.tutorials.mnist import input_data
 import random
+import math
 import numpy as np
 import json
 import network_json
@@ -92,11 +92,33 @@ def get_fc1_sum(weight_list, area):
 
     return data
 
-def get_separate_conv_data(data):
+def get_separate_conv_data(data, threshold):
     separate = {}
-    separate['separate_conv1'] = np.array(data[0]).transpose((2,5,0,1,3,4)).squeeze().shape()
-    separate['separate_conv2'] = np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze().shape()
+    #np.round(np.multiply(get_feature_map(feature_list[1], 28, 32), 255), decimals=0)
+    sep_1 = np.array([np.array(data[0]).transpose((2,5,0,1,3,4)).squeeze().tolist()])
+    sep_2 = np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze()
+    separate['separate_conv1'] = get_highest_layer_activations(threshold,sep_1)
+    separate['separate_conv2'] = get_highest_layer_activations(threshold,sep_2)#np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze().shape()
     return separate
+
+def get_highest_layer_activations(threshold, data):
+    brightness = []
+    for i in range(len(data)):
+        feature_brightness = []
+        for j in range(len(data[i])):
+            temp = get_image_brightness(np.array(data[i][j]).flatten())
+            feature_brightness.append(temp)
+        brightness.append(feature_brightness)
+    total_brightness = []
+    for i in range(len(brightness)):
+        top_feature_brightness = []
+        for j in range(threshold):
+            maximum = max(brightness[i])
+            index = brightness[i].index(maximum)
+            top_feature_brightness.append([maximum, i, index])
+            brightness[i][index] = 0
+        total_brightness.append(top_feature_brightness)
+    return total_brightness
 
 x = tf.placeholder("float", [784])
 
@@ -126,8 +148,9 @@ def conv():
     data['label'] = np.argmax(label)
     data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
-    data['separated_convdata'] = get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image}))
-    data['struct'], data['no_nodes'] = network_json.get_json(struct, data['convdata']['log_certainty'])
+    separated_conv_data = get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image}), 10)
+    data['separated_convdata'] = separated_conv_data
+    data['struct'], data['no_nodes'] = network_json.get_json(struct, data['convdata']['log_certainty'], separated_conv_data)
     return json.dumps(data)
 
 if __name__ == "__main__":

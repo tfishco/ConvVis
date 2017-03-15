@@ -22,7 +22,6 @@ def conv(x, keep_prob):
             convolutions.append(new)
         return convolutions
 
-
     def conv2d(x, W):
       return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
 
