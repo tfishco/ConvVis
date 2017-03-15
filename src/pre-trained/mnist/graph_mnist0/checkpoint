@@ -1,0 +1,2 @@
+model_checkpoint_path: "/Users/tomfisher/DeepVis/src/pre-trained/mnist/graph_mnist0/mnist.ckpt"
+all_model_checkpoint_paths: "/Users/tomfisher/DeepVis/src/pre-trained/mnist/graph_mnist0/mnist.ckpt"

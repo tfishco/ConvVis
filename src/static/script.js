@@ -1,5 +1,8 @@
 function gen_graph(data) {
 
+  var weightType = "raw";
+  //var weightType = "abs";
+
   function reset() {
     d3.selectAll("svg").remove();
   }
@@ -45,8 +48,14 @@ function gen_graph(data) {
     .links(graph.links)
     .start();
 
-  var linkopacity = d3.scale.linear().domain([0, Math.max.apply(Math, data.weightdata
-      .fc1)])
+  var classopacity = d3.scale.linear().domain([Math.min.apply(null, data.convdata
+      .log_certainty), Math.max.apply(null, data.convdata
+      .log_certainty)])
+    .range([0, 1.0]);
+
+  var linkopacity = d3.scale.linear().domain([Math.min.apply(null, data.weightdata
+      .fc1[weightType]), Math.max.apply(null, data.weightdata
+      .fc1[weightType])])
     .range([0, 1.0]);
 
   var link = svg.selectAll(".link")
@@ -80,8 +89,7 @@ function gen_graph(data) {
       .attr("opacity", function(d) {
         var op;
         if (parseInt(d.target.name.split("_")[0]) == 7) {
-          console.log(d.target.value);
-          op = d.target.value * 3.5;
+          op = classopacity(d.target.value);
         } else if (parseInt(d.target.name.split("_")[0]) == 6) {
           op = 1;
         } else if (parseInt(d.target.name.split("_")[0]) <= 5) {
@@ -103,9 +111,13 @@ function gen_graph(data) {
       var src = link_data.source.name.split("_");
       var tgt = link_data.target.name.split("_");
       if (src[0] == '4' || src[0] == '3') {
-        links[i].setAttribute("stroke-width", data.weightdata.fc1[src[1]]);
+        links[i].setAttribute("stroke-width", data.weightdata.fc1[weightType][
+          src[1]
+        ]);
       } else if (src[0] == '2') {
-        links[i].setAttribute("stroke-width", data.weightdata.fc1[tgt[1]]);
+        links[i].setAttribute("stroke-width", data.weightdata.fc1[weightType][
+          tgt[1]
+        ]);
       } else if (src[0] == '1') {
         if (parseFloat(links[lastIndex].getAttribute(
             "stroke-width")) > parseFloat(links[lastIndex - 1].getAttribute(
@@ -155,9 +167,34 @@ function gen_graph(data) {
     .attr("fill", function(d) {
       var image_ref = d.name.split("_");
       if (image_ref[1] == data.convdata.prediction) {
-        return 'orangered';
+        return 'yellow';
       } else {
         return 'orange';
+      }
+    })
+    .style("stroke", function(d) {
+      var image_ref = d.name.split("_");
+      if (image_ref[1] == data.label) {
+        return 'MediumVioletRed ';
+      } else {
+        return 'orangered';
+      }
+    });
+
+  var decisionLabel = d3.selectAll(".node-decision")
+    .append("text")
+    .attr("dx", 30)
+    .attr("dy", ".35em")
+    .text(function(d) {
+      var name = d.name.split("_");
+      if (name[0] == "7") {
+        return name[1];
+      }
+    })
+    .style("text-decoration", function(d) {
+      var name = d.name.split("_");
+      if (name[1] == data.label) {
+        return "underline";
       }
     });
 
@@ -180,6 +217,8 @@ function gen_graph(data) {
     });
   });
 
+  init();
+
   var toggle = 0;
 
   var linkedByIndex = {};
@@ -190,6 +229,34 @@ function gen_graph(data) {
     linkedByIndex[d.source.index + "," + d.target.index] = 1;
   });
 
+  function init() {
+    var nodes = d3.selectAll("image")[0];
+    toImage(data.convdata.features[1]["0"].feature_0, nodes[0]);
+  }
+
+  function toImage(data, node) {
+    var buffer = new Uint8ClampedArray(data);
+
+    var width = Math.sqrt(data.length / 4),
+      height = Math.sqrt(data.length / 4);
+
+    var canvas = document.createElement("canvas");
+    var ctx = canvas.getContext('2d');
+
+    canvas.width = width;
+    canvas.height = height;
+
+    var idata = ctx.createImageData(width, height);
+    idata.data.set(buffer);
+    ctx.putImageData(idata, 0, 0);
+
+    //set image created by canvas to image element.
+    var image = document.getElementById("image_" + node.__data__.name);
+    image.width.baseVal.value = width;
+    image.height.baseVal.value = height;
+    image.href.baseVal = canvas.toDataURL();
+  }
+
   function populateNodes() {
     var nodes = d3.selectAll("image")[0];
     for (i = 0; i < nodes.length; i++) {
@@ -198,26 +265,7 @@ function gen_graph(data) {
         var raw = data.convdata.features[(parseInt(image_ref[0]) + 1)][
           image_ref[1]
         ]["feature_" + parseInt(image_ref[1])];
-        var buffer = new Uint8ClampedArray(raw);
-
-        var width = Math.sqrt(raw.length / 4),
-          height = Math.sqrt(raw.length / 4);
-
-        var canvas = document.createElement("canvas");
-        var ctx = canvas.getContext('2d');
-
-        canvas.width = width;
-        canvas.height = height;
-
-        var idata = ctx.createImageData(width, height);
-        idata.data.set(buffer);
-        ctx.putImageData(idata, 0, 0);
-
-        //set image created by canvas to image element.
-        var image = document.getElementById("image_" + nodes[i].__data__.name);
-        image.width.baseVal.value = width;
-        image.height.baseVal.value = height;
-        image.href.baseVal = canvas.toDataURL();
+        toImage(raw, nodes[i]);
       }
     }
   }
@@ -271,8 +319,8 @@ function gen_graph(data) {
     idata.data.set(buffer);
     ctx.putImageData(idata, 0, 0);
 
-    document.getElementById("image-height").innerHTML = height;
-    document.getElementById("image-width").innerHTML = width;
+    document.getElementById("image-dimensions").innerHTML = height + "x" +
+      width;
 
   }
 

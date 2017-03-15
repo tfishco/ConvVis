@@ -20,11 +20,9 @@
             <br>
             <input type="submit" value="Submit">
           </form>
-          <div class="chart"></div>
-          <canvas id="image">
-          </canvas>
-          <div id="dimension">
-            (<span id="image-width">w</span> x <span id="image-height">h</span>)
+          <div id="thresholdContainer">
+            Weight Threshold:<span id="weightThresholdValue"></span>
+            <input type="range" id="weightThreshold" min="0" max="1.0" step="0.01" oninput="sliderChange('weightThresholdValue',this.value);">
           </div>
           <br>
           <div class="predictionContainer">
@@ -35,9 +33,11 @@
             Actual:
             <span id="actual"></span>
           </div>
-          <div id="thresholdContainer">
-            Weight Threshold:<span id="weightThresholdValue"></span>
-            <input type="range" id="weightThreshold" min="0" max="1.0" step="0.01" oninput="sliderChange('weightThresholdValue',this.value);">
+          <br>
+          <canvas id="image">
+          </canvas>
+          <div id="dimension">
+            <span id="image-dimensions"></span>
           </div>
         </div>
       </div>

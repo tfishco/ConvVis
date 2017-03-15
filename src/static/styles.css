@@ -46,19 +46,6 @@ div.tooltip {
   margin: 50px auto;
 }
 
-.chart {
-  padding: 10px;
-}
-
-.chart div {
-  font: 10px sans-serif;
-  background-color: steelblue;
-  text-align: right;
-  padding: 3px;
-  margin: 1px;
-  color: white;
-}
-
 #image {
   margin: auto;
   border: 1px solid;
