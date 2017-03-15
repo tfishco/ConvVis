@@ -92,16 +92,20 @@ def get_fc1_sum(weight_list, area):
 
     return data
 
-
+def get_separate_conv_data(data):
+    separate = {}
+    separate['separate_conv1'] = np.array(data[0]).transpose((2,5,0,1,3,4)).squeeze().shape()
+    separate['separate_conv2'] = np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze().shape()
+    return separate
 
 x = tf.placeholder("float", [784])
 
 sess = tf.Session()
 
-train_iteration = 600
+train_iteration = 100
 
 with tf.variable_scope("conv"):
-    _, variables, features = classifier.conv(x, 1.0)
+    _, variables, features , separated_conv = classifier.conv(x, 1.0)
 saver = tf.train.Saver(variables)
 saver.restore(sess, "pre-trained/mnist/graph_mnist" + str(train_iteration) + "/mnist.ckpt")
 
@@ -122,6 +126,7 @@ def conv():
     data['label'] = np.argmax(label)
     data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
+    data['separated_convdata'] = get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image}))
     data['struct'], data['no_nodes'] = network_json.get_json(struct, data['convdata']['log_certainty'])
     return json.dumps(data)
 

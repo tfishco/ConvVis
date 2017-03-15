@@ -11,7 +11,7 @@ sess = tf.Session()
 with tf.variable_scope("conv"):
     x = tf.placeholder(tf.float32, [None, 784])
     keep_prob = tf.placeholder(tf.float32)
-    y_conv, variables, _ = classifier.conv(x,keep_prob)
+    y_conv, variables, _ , _= classifier.conv(x,keep_prob)
 
 y_ = tf.placeholder(tf.float32, [None,10])
 
@@ -23,13 +23,13 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 saver = tf.train.Saver(variables, max_to_keep = 11)
 init_op = tf.initialize_all_variables()
 
-iterations = 601
+iterations = 101
 
 with tf.Session() as sess:
     sess.run(init_op)
     for i in range(iterations):
         batch = mnist.train.next_batch(50)
-        if i % 600 == 0:
+        if i % 100 == 0:
             train_accuracy = accuracy.eval(feed_dict={
                 x:batch[0], y_: batch[1], keep_prob: 1.0})
             print("step %d, training accuracy %g"%(i, train_accuracy))
