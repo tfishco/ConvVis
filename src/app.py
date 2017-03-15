@@ -51,12 +51,6 @@ def get_feature_map(layer, image_size, channels):
     temp_image = temp_image.transpose((2, 0, 1))
     return temp_image.reshape((-1, image_size, image_size, 1))
 
-#features = [x_image, h_conv1, h_pool1, h_conv2, h_pool2, h_pool2_flat, h_fc1, h_fc1_drop, fc_decision_data]
-#               0        1        2         3       4           5         6         7               8
-
-#weights = [W_conv1, b_conv1, W_conv2, b_conv2, W_fc1, b_fc1, W_fc2, b_fc2]
-#               0       1        2         3       4      5     6       7
-
 def get_conv_data(feature_list):
     features = {}
     features['1'], max1 = get_feature_json(np.array(np.round(np.multiply(feature_list[0], 255), decimals=0).tolist()))
@@ -97,8 +91,8 @@ def get_separate_conv_data(data, threshold):
     #np.round(np.multiply(get_feature_map(feature_list[1], 28, 32), 255), decimals=0)
     sep_1 = np.array([np.array(data[0]).transpose((2,5,0,1,3,4)).squeeze().tolist()])
     sep_2 = np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze()
-    separate['separate_conv1'] = get_highest_layer_activations(threshold,sep_1)
-    separate['separate_conv2'] = get_highest_layer_activations(threshold,sep_2)#np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze().shape()
+    separate['separate_conv1'], separate['indexes_conv1'] = get_highest_layer_activations(threshold,sep_1)
+    separate['separate_conv2'], separate['indexes_conv2'] = get_highest_layer_activations(threshold,sep_2)#np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze().shape()
     return separate
 
 def get_highest_layer_activations(threshold, data):
@@ -106,21 +100,19 @@ def get_highest_layer_activations(threshold, data):
     for i in range(len(data)):
         feature_brightness = []
         for j in range(len(data[i])):
-            temp = get_image_brightness(np.array(data[i][j]).flatten())
+            temp = get_image_brightness(np.multiply(np.array(data[i][j]).flatten(), 255))
             feature_brightness.append(temp)
         brightness.append(feature_brightness)
     total_brightness = []
     for i in range(len(brightness)):
-        top_feature_brightness = []
-        for j in range(threshold):
-            maximum = max(brightness[i])
-            index = brightness[i].index(maximum)
-            top_feature_brightness.append([maximum, i, index])
-            brightness[i][index] = 0
-        total_brightness.append(top_feature_brightness)
-    return total_brightness
+        total_brightness.append(np.array(brightness[i]).argsort()[-threshold:][::-1].tolist())
+    return brightness, total_brightness
 
-train_iteration = 100
+x = tf.placeholder("float", [784])
+
+sess = tf.Session()
+
+train_iteration = 0
 
 app = Flask(__name__)
 
@@ -128,15 +120,14 @@ app = Flask(__name__)
 def index():
     return render_template("index.html")
 
+with tf.variable_scope("conv"):
+    _, variables, features , separated_conv = classifier.conv(x, 1.0)
+saver = tf.train.Saver(variables)
+saver.restore(sess, "pre-trained/mnist/graph_mnist" + str(train_iteration) + "/mnist.ckpt")
+
+
 @app.route("/conv", methods=['POST'])
 def conv():
-    x = tf.placeholder("float", [784])
-    sess = tf.Session()
-
-    with tf.variable_scope("conv"):
-        _, variables, features , separated_conv = classifier.conv(x, 1.0)
-    saver = tf.train.Saver(variables)
-    saver.restore(sess, "pre-trained/mnist/graph_mnist" + str(train_iteration) + "/mnist.ckpt")
 
     index = int(request.form['val'])
     struct = json.loads(request.form['struct'])
@@ -150,7 +141,6 @@ def conv():
     separated_conv_data = get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image}), 10)
     data['separated_convdata'] = separated_conv_data
     data['struct'], data['no_nodes'] = network_json.get_json(struct[0], struct[1], data['convdata']['log_certainty'], separated_conv_data)
-    sess.close()
     return json.dumps(data)
 
 if __name__ == "__main__":

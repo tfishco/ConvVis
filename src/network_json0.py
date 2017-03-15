@@ -64,28 +64,31 @@ def get_json(struct, node_type, value, seperate_conv):
             nodes.append(node)
 # struct = [1, 32, 32, 64, 64, 1, 1, 10]
 # node_type = ['input_0', 'conv_1', 'pool_1','conv_2', 'pool_2', 'fc_1', 'fc_2', 'decision_0']
-# seperate_conv = [[0.1234.., i , j], [], ... , []]
+# seperate_conv =
+# separate_conv1
+# separate_conv2
+# indexes_conv1
+# indexes_conv2
 
     # Links
     for i in range(len(struct)):
         if i < len(struct) - 1 and node_type[i + 1] == 'conv_1':
             brightnesses = seperate_conv['separate_conv' + str(node_type[i + 1].split("_")[1])][0]
-            np.array(brightnesses)
+            indexes = seperate_conv['indexes_conv1' + + str(node_type[i + 1].split("_")[1])]
             for j in range(len(brightnesses)):
                 link = {}
                 print(brightnesses[j])
                 link['source'] = 0 # 1 - 32
-                link['target'] = brightnesses[j][2] # 33 - 64
+                link['target'] = indexes[j][2] # 33 - 64
                 links.append(link)
         if i < len(struct) - 1 and node_type[i + 1] == 'conv_1':
             print(node_type[i + 1])
             brightnesses = seperate_conv['separate_conv' + str(node_type[i + 1].split("_")[1])][0]
             np.array(brightnesses)
-            for j in range(len(brightnesses)):
+            for j in range(len(brightnesses[i])):
                 link = {}
-                print(brightnesses[j])
-                link['source'] = 0 # 1 - 32
-                link['target'] = brightnesses[j][2] # 33 - 64
+                link['source'] = 0
+                link['target'] = brightnesses[j][2] # 1 - 32
                 links.append(link)
 
     main['nodes'] = nodes

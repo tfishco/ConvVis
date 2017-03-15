@@ -23,7 +23,7 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 saver = tf.train.Saver(variables, max_to_keep = 11)
 init_op = tf.initialize_all_variables()
 
-iterations = 101
+iterations = 201
 
 with tf.Session() as sess:
     sess.run(init_op)
