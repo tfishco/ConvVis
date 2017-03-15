@@ -1,7 +1,5 @@
 import json
 import numpy as np
-#struct = [1,32,32,64,64,3136,1024,10] fully connected
-#struct = [1,32,32,64,64,1,1,10]
 
 def get_coords(vert_size_gap, horiz_size_gap, no_columns, layers, layers_size):
     y_offset = 50
@@ -23,6 +21,9 @@ def get_coords(vert_size_gap, horiz_size_gap, no_columns, layers, layers_size):
             y_vals.append(dy)
         dx += layer_offset
     return x_vals, y_vals
+
+# struct = [1, 32, 32, 64, 64, 1, 1, 10]
+# node_type = ['conv_1', 'pool_1','conv_2', 'pool_2', 'fc_1', 'fc_2', 'decision']
 
 def get_json(struct, node_type, value, seperate_conv):
     main = {}
@@ -61,53 +62,30 @@ def get_json(struct, node_type, value, seperate_conv):
                 node['fixed'] = True
                 count += 1
             nodes.append(node)
+# struct = [1, 32, 32, 64, 64, 1, 1, 10]
+# node_type = ['input_0', 'conv_1', 'pool_1','conv_2', 'pool_2', 'fc_1', 'fc_2', 'decision_0']
+# seperate_conv = [[0.1234.., i , j], [], ... , []]
 
     # Links
     for i in range(len(struct)):
-        if i == 0:
-            for j in range(1, struct[i + 1] + 1):
+        if i < len(struct) - 1 and node_type[i + 1] == 'conv_1':
+            brightnesses = seperate_conv['separate_conv' + str(node_type[i + 1].split("_")[1])][0]
+            np.array(brightnesses)
+            for j in range(len(brightnesses)):
                 link = {}
-                link['source'] = 0
-                link['target'] = j # 1 - 32
+                print(brightnesses[j])
+                link['source'] = 0 # 1 - 32
+                link['target'] = brightnesses[j][2] # 33 - 64
                 links.append(link)
-        if i == 1:
-            for j in range(1, struct[i] + 1):
+        if i < len(struct) - 1 and node_type[i + 1] == 'conv_1':
+            print(node_type[i + 1])
+            brightnesses = seperate_conv['separate_conv' + str(node_type[i + 1].split("_")[1])][0]
+            np.array(brightnesses)
+            for j in range(len(brightnesses)):
                 link = {}
-                link['source'] = j # 1 - 32
-                link['target'] = j + struct[i] # 33 - 64
-                links.append(link)
-        if i == 2:
-            for j in range(1, struct[i] + 1):
-                link1 = {}
-                link2 = {}
-                link1['source'] = j + struct[i]
-                link2['source'] = j + struct[i]
-                link1['target'] = j + struct[i + 1] + j
-                link2['target'] = j + struct[i + 1] + j - 1
-                links.append(link1)
-                links.append(link2)
-        if i == 3:
-            for j in range(1,struct[i] + 1):
-                link = {}
-                link['source'] = j + struct[i]
-                link['target'] = j + struct[i] + struct[i + 1]
-                links.append(link)
-        if i == 4:
-            for j in range(1,struct[i] + 1):
-                link = {}
-                link['source'] = j + struct[i - 1] + struct[i]
-                link['target'] = 193
-                links.append(link)
-        if i == 5:
-            link = {}
-            link['source'] = 193
-            link['target'] = 194
-            links.append(link);
-        if i == 6:
-            for j in range(1,struct[i + 1] + 1):
-                link = {}
-                link['source'] = 194
-                link['target'] = 194 + j
+                print(brightnesses[j])
+                link['source'] = 0 # 1 - 32
+                link['target'] = brightnesses[j][2] # 33 - 64
                 links.append(link)
 
     main['nodes'] = nodes

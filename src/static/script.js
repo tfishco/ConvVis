@@ -62,7 +62,7 @@ function gen_graph(data) {
     .data(graph.links)
     .enter().append("line")
     .attr("class", "link")
-    .call(linkWidth)
+    .attr("stroke-width", 5)
     .attr("stroke", "orangered");
 
   var node = svg.selectAll(".node")
@@ -86,7 +86,7 @@ function gen_graph(data) {
     d3.select("#weightThresholdValue").text(" " + val);
     d3.select("#weightThreshold").property("value", val);
     svg.selectAll(".link")
-      .attr("opacity", function(d) {
+      /*.attr("opacity", function(d) {
         var op;
         if (parseInt(d.target.name.split("_")[0]) == 7) {
           op = classopacity(d.target.value);
@@ -100,42 +100,8 @@ function gen_graph(data) {
         } else {
           return 0.2;
         }
-      });
-  }
-
-  function linkWidth() {
-    var links = svg.selectAll(".link")["0"];
-    var lastIndex = 63 + 64;
-    for (i = links.length - 1; i >= 0; i--) {
-      var link_data = links[i].__data__;
-      var src = link_data.source.name.split("_");
-      var tgt = link_data.target.name.split("_");
-      if (src[0] == '4' || src[0] == '3') {
-        links[i].setAttribute("stroke-width", data.weightdata.fc1[weightType][
-          src[1]
-        ]);
-      } else if (src[0] == '2') {
-        links[i].setAttribute("stroke-width", data.weightdata.fc1[weightType][
-          tgt[1]
-        ]);
-      } else if (src[0] == '1') {
-        if (parseFloat(links[lastIndex].getAttribute(
-            "stroke-width")) > parseFloat(links[lastIndex - 1].getAttribute(
-            "stroke-width"))) {
-          links[i].setAttribute("stroke-width",
-            parseFloat(links[lastIndex].getAttribute(
-              "stroke-width")));
-        } else {
-          links[i].setAttribute("stroke-width",
-            parseFloat(links[lastIndex - 1].getAttribute(
-              "stroke-width")));
-        }
-        lastIndex -= 2;
-      } else if (src[0] == '0') {
-        links[i].setAttribute("stroke-width", links[i + 32].getAttribute(
-          "stroke-width"));
-      }
-    }
+      })*/
+    ;
   }
 
   var image = d3.selectAll(".node-image")

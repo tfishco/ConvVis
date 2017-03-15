@@ -5,7 +5,7 @@ import random
 import math
 import numpy as np
 import json
-import network_json
+import network_json0 as network_json
 import sys
 
 sys.path.insert(0, 'pre-trained/')
@@ -120,16 +120,7 @@ def get_highest_layer_activations(threshold, data):
         total_brightness.append(top_feature_brightness)
     return total_brightness
 
-x = tf.placeholder("float", [784])
-
-sess = tf.Session()
-
 train_iteration = 100
-
-with tf.variable_scope("conv"):
-    _, variables, features , separated_conv = classifier.conv(x, 1.0)
-saver = tf.train.Saver(variables)
-saver.restore(sess, "pre-trained/mnist/graph_mnist" + str(train_iteration) + "/mnist.ckpt")
 
 app = Flask(__name__)
 
@@ -139,6 +130,14 @@ def index():
 
 @app.route("/conv", methods=['POST'])
 def conv():
+    x = tf.placeholder("float", [784])
+    sess = tf.Session()
+
+    with tf.variable_scope("conv"):
+        _, variables, features , separated_conv = classifier.conv(x, 1.0)
+    saver = tf.train.Saver(variables)
+    saver.restore(sess, "pre-trained/mnist/graph_mnist" + str(train_iteration) + "/mnist.ckpt")
+
     index = int(request.form['val'])
     struct = json.loads(request.form['struct'])
     image = mnist.test.images[index]
@@ -150,7 +149,8 @@ def conv():
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
     separated_conv_data = get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image}), 10)
     data['separated_convdata'] = separated_conv_data
-    data['struct'], data['no_nodes'] = network_json.get_json(struct, data['convdata']['log_certainty'], separated_conv_data)
+    data['struct'], data['no_nodes'] = network_json.get_json(struct[0], struct[1], data['convdata']['log_certainty'], separated_conv_data)
+    sess.close()
     return json.dumps(data)
 
 if __name__ == "__main__":
