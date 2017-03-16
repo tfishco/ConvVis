@@ -67,12 +67,10 @@ def get_json(struct, node_type, value, seperate_conv):
 # separated_convdata =
 # separate_conv1
 # separate_conv2
-    print(struct)
     # Links
     for i in range(len(struct)):
         if i < len(struct) - 1:
             if node_type[i + 1] == 'conv_1':
-                print("conv_1")
                 brightnesses = np.array(seperate_conv['separate_conv1']).squeeze()
                 for j in range(len(brightnesses)):
                     link = {}
@@ -80,20 +78,15 @@ def get_json(struct, node_type, value, seperate_conv):
                     link['target'] = brightnesses[j][1] # 33 - 64
                     links.append(link)
             if i < len(struct) - 1 and node_type[i + 1] == 'conv_2':
-                print("conv_2")
                 brightnesses = np.array(seperate_conv['separate_conv2']).squeeze()
                 for j in range(len(brightnesses)):
                     for k in range(len(brightnesses[j])):
                         link = {}
                         source = j + 33
                         target = brightnesses[j][k][1] + 33 + 32
-                        print(source,target)
                         link['source'] = source
                         link['target'] = target # 33 - 64
                         links.append(link)
-            if node_type[i + 1].split("_")[0] == 'decision':
-                print("decision")
-
 
     main['nodes'] = nodes
     main['links'] = links

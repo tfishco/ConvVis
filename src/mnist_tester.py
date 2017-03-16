@@ -18,8 +18,6 @@ mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
 
 cifar_10.load_and_preprocess_input(dataset_dir='src/resource/CIFAR_data')
 
-print(cifar_10.test_all)
-
 x = tf.placeholder("float", [784])
 
 sess = tf.Session()
@@ -28,8 +26,6 @@ with tf.variable_scope("conv"):
     prediction , variables, features, separate_conv = classifier.conv(x, 1.0)
 saver = tf.train.Saver(variables)
 saver.restore(sess, "pre-trained/mnist/graph_mnist100/mnist.ckpt")
-
-
 
 def get_separate_conv_data(data, threshold):
     separate = {}
