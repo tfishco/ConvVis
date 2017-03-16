@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-def conv(x, keep_prob):
+def conv(x, keep_prob, image_dimensions):
     def weight_variable(shape):
       initial = tf.truncated_normal(shape, stddev=0.1)
       return tf.Variable(initial)
@@ -33,7 +33,7 @@ def conv(x, keep_prob):
     W_conv1 = weight_variable([5, 5, 1, 32])
     b_conv1 = bias_variable([32])
 
-    x_image = tf.reshape(x, [-1,28,28,1])
+    x_image = tf.reshape(x, [-1,image_dimensions,image_dimensions,1])
 
     h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
     h_conv1_separate = separate_conv(x_image, W_conv1)
@@ -46,10 +46,10 @@ def conv(x, keep_prob):
     h_conv2_separate = separate_conv(h_pool1, W_conv2)
     h_pool2 = max_pool_2x2(h_conv2)
 
-    W_fc1 = weight_variable([7 * 7 * 64, 1024])
+    W_fc1 = weight_variable([(image_dimensions / 4) * (image_dimensions / 4) * 64, 1024])
     b_fc1 = bias_variable([1024])
 
-    h_pool2_flat = tf.reshape(h_pool2, [-1, 7*7*64])
+    h_pool2_flat = tf.reshape(h_pool2, [-1, (image_dimensions / 4) * (image_dimensions / 4) * 64])
     h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 
     h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)

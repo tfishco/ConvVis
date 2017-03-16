@@ -11,8 +11,21 @@ import sys
 sys.path.insert(0, 'pre-trained/')
 
 import classifier
+import cifar_10
 
-mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
+dataset = 'cifar'
+
+if dataset == 'mnist':
+    mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
+    test_data = mnist.test.images
+    test_labels = mnist.test.labels
+    image_dimensions = 28
+
+elif dataset == 'cifar':
+    cifar_10.load_and_preprocess_input(dataset_dir='resource/CIFAR_data')
+    test_data = cifar_10.validate_all['data'][:,:,:,None,1]
+    test_labels = cifar_10.validate_all['labels']
+    image_dimensions = cifar_10.image_width
 
 def get_image_brightness(image):
     total_brightness = 0
@@ -54,10 +67,10 @@ def get_feature_map(layer, image_size, channels):
 def get_conv_data(feature_list):
     features = {}
     features['1'], max1 = get_feature_json(np.array(np.round(np.multiply(feature_list[0], 255), decimals=0).tolist()))
-    features['2'], max2 = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[1], 28, 32), 255), decimals=0))
-    features['3'], max3 = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[2], 14, 32), 255), decimals=0))
-    features['4'], max4 = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[3], 14, 64), 255), decimals=0))
-    features['5'], max5 = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[4], 7, 64), 255), decimals=0))
+    features['2'], max2 = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[1], image_dimensions, 32), 255), decimals=0))
+    features['3'], max3 = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[2], image_dimensions / 2, 32), 255), decimals=0))
+    features['4'], max4 = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[3], image_dimensions / 2, 64), 255), decimals=0))
+    features['5'], max5 = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[4], image_dimensions / 4, 64), 255), decimals=0))
     features['6'], max6 = get_feature_json([np.round(np.multiply(feature_list[6], 255), decimals=0)])
 
     data = {}
@@ -70,7 +83,7 @@ def get_conv_data(feature_list):
 
 def get_weight_data(weights_list):
     data = {}
-    data['fc1'] = get_fc1_sum(weights_list[4].tolist(), 7*7)
+    data['fc1'] = get_fc1_sum(weights_list[4].tolist(), image_dimensions * image_dimensions)
     return data
 
 def get_fc1_sum(weight_list, area):
@@ -112,7 +125,7 @@ def get_highest_layer_activations(threshold, data):
         top_brightness.append(max_vals)
     return top_brightness, brightness
 
-x = tf.placeholder("float", [784])
+x = tf.placeholder("float", [image_dimensions * image_dimensions])
 
 sess = tf.Session()
 
@@ -125,9 +138,9 @@ def index():
     return render_template("index.html")
 
 with tf.variable_scope("conv"):
-    _, variables, features , separated_conv = classifier.conv(x, 1.0)
+    _, variables, features , separated_conv = classifier.conv(x, 1.0,image_dimensions)
 saver = tf.train.Saver(variables)
-saver.restore(sess, "pre-trained/mnist/graph_mnist" + str(train_iteration) + "/mnist.ckpt")
+saver.restore(sess, "pre-trained/" + dataset + "/graph_" + dataset + str(train_iteration) + "/" + dataset + ".ckpt")
 
 
 @app.route("/conv", methods=['POST'])
@@ -135,14 +148,14 @@ def conv():
 
     index = int(request.form['val'])
     struct = json.loads(request.form['struct'])
-    image = mnist.test.images[index]
-    label = mnist.test.labels[index]
+    image = test_data[index].reshape((image_dimensions * image_dimensions,))
+    label = test_labels[index]
 
     data = {}
     data['label'] = np.argmax(label)
     data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
-    separated_conv_data = get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image}), 20)
+    separated_conv_data = get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image}), 10)
     data['separated_convdata'] = separated_conv_data
     data['struct'], data['no_nodes'] = network_json.get_json(struct[0], struct[1], data['convdata']['log_certainty'], separated_conv_data)
     return json.dumps(data)

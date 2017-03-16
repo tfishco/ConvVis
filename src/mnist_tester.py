@@ -12,8 +12,13 @@ from matplotlib import pyplot as plt
 sys.path.insert(0, 'pre-trained/')
 
 import classifier
+import cifar_10
 
 mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
+
+cifar_10.load_and_preprocess_input(dataset_dir='src/resource/CIFAR_data')
+
+print(cifar_10.test_all)
 
 x = tf.placeholder("float", [784])
 
@@ -95,6 +100,6 @@ print(conv_array_json['separate_conv1'])
 #    fig.add_subplot(4,65,j + 1)
 #    plt.imshow(features_pool2[j].squeeze(), cmap='gray')
 #    plt.axis('off')
-plt.show()
+#plt.show()
 #print("test accuracy %g"%accuracy.eval(feed_dict={
 #    x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
