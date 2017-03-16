@@ -31,22 +31,26 @@ def get_separate_conv_data(data, threshold):
     #np.round(np.multiply(get_feature_map(feature_list[1], 28, 32), 255), decimals=0)
     sep_1 = np.array([np.array(data[0]).transpose((2,5,0,1,3,4)).squeeze().tolist()])
     sep_2 = np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze()
-    separate['separate_conv1'] = get_highest_layer_activations(threshold,sep_1)
-    separate['separate_conv2'] = get_highest_layer_activations(threshold,sep_2)#np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze().shape()
-    return separate, sep_1, sep_2
+    separate['separate_conv1'] = get_highest_layer_activations(threshold,np.multiply(sep_1,255))
+    separate['separate_conv2'] = get_highest_layer_activations(threshold,np.multiply(sep_2,255))#np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze().shape()
+    return separate
 
 def get_highest_layer_activations(threshold, data):
     brightness = []
     for i in range(len(data)):
-        feature_brightness = []
+        group_brightness = []
         for j in range(len(data[i])):
-            temp = get_image_brightness(np.multiply(np.array(data[i][j]).flatten(), 255))
-            feature_brightness.append(temp)
-        brightness.append(feature_brightness)
-    total_brightness = []
+            val = abs(get_image_brightness(np.array(data[i][j]).flatten()))
+            group_brightness.append(val)
+        brightness.append(group_brightness)
+    top_brightness = []
     for i in range(len(brightness)):
-        total_brightness.append(np.array(brightness[i]).argsort()[-threshold:][::-1].tolist())
-    return brightness
+        max_indexes = np.array(brightness[i]).argsort()[-threshold:][::-1]
+        max_vals = []
+        for j in range(threshold):
+            max_vals.append([brightness[i][max_indexes[j]],max_indexes[j]])
+        top_brightness.append(max_vals)
+    return top_brightness
 
 def get_image_brightness(image):
     total_brightness = 0
@@ -61,18 +65,20 @@ label = mnist.test.labels[index]
 
 conv_array_seperate = np.array(sess.run(separate_conv, feed_dict={x:image}))
 
-conv_array_json, y1, y2 = get_separate_conv_data(conv_array_seperate,10)
+conv_array_json = get_separate_conv_data(conv_array_seperate,10)
+
+print(conv_array_json['separate_conv1'])
 
 #print("Actual=", mnist.test.labels[index].argmax(), ": Prediction=", features[1])
 
-print(np.array(y1).shape)
+#print(np.array(y1).shape)
 
-print(np.absolute(y2[0][0].squeeze()))
+#print(np.absolute(y2[0][0].squeeze()))
 
-fig = plt.figure()
-fig.add_subplot(111)
-plt.imshow(np.absolute(y1[0][0].squeeze()), cmap='gray')
-plt.axis('off')
+#fig = plt.figure()
+#fig.add_subplot(111)
+#plt.imshow(np.absolute(y1[0][0].squeeze()), cmap='gray')
+#plt.axis('off')
 #for j in range(32):
 #    fig.add_subplot(1,33,j + 1)
 #    plt.imshow(y2[2][j].squeeze(), cmap='gray')

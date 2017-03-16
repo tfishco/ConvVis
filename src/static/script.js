@@ -62,7 +62,7 @@ function gen_graph(data) {
     .data(graph.links)
     .enter().append("line")
     .attr("class", "link")
-    .attr("stroke-width", 5)
+    .attr("stroke-width", 3)
     .attr("stroke", "orangered");
 
   var node = svg.selectAll(".node")

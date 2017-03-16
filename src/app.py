@@ -91,28 +91,32 @@ def get_separate_conv_data(data, threshold):
     #np.round(np.multiply(get_feature_map(feature_list[1], 28, 32), 255), decimals=0)
     sep_1 = np.array([np.array(data[0]).transpose((2,5,0,1,3,4)).squeeze().tolist()])
     sep_2 = np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze()
-    separate['separate_conv1'], separate['indexes_conv1'] = get_highest_layer_activations(threshold,sep_1)
-    separate['separate_conv2'], separate['indexes_conv2'] = get_highest_layer_activations(threshold,sep_2)#np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze().shape()
+    separate['separate_conv1'] = get_highest_layer_activations(threshold,sep_1)
+    separate['separate_conv2'] = get_highest_layer_activations(threshold,sep_2)#np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze().shape()
     return separate
 
 def get_highest_layer_activations(threshold, data):
     brightness = []
     for i in range(len(data)):
-        feature_brightness = []
+        group_brightness = []
         for j in range(len(data[i])):
-            temp = get_image_brightness(np.multiply(np.array(data[i][j]).flatten(), 255))
-            feature_brightness.append(temp)
-        brightness.append(feature_brightness)
-    total_brightness = []
+            val = get_image_brightness(np.array(data[i][j]).flatten())
+            group_brightness.append(val)
+        brightness.append(group_brightness)
+    top_brightness = []
     for i in range(len(brightness)):
-        total_brightness.append(np.array(brightness[i]).argsort()[-threshold:][::-1].tolist())
-    return brightness, total_brightness
+        max_indexes = np.array(brightness[i]).argsort()[-threshold:][::-1]
+        max_vals = []
+        for j in range(threshold):
+            max_vals.append([brightness[i][max_indexes[j]],max_indexes[j]])
+        top_brightness.append(max_vals)
+    return top_brightness
 
 x = tf.placeholder("float", [784])
 
 sess = tf.Session()
 
-train_iteration = 0
+train_iteration = 200
 
 app = Flask(__name__)
 
@@ -138,7 +142,7 @@ def conv():
     data['label'] = np.argmax(label)
     data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
-    separated_conv_data = get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image}), 10)
+    separated_conv_data = get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image}), 20)
     data['separated_convdata'] = separated_conv_data
     data['struct'], data['no_nodes'] = network_json.get_json(struct[0], struct[1], data['convdata']['log_certainty'], separated_conv_data)
     return json.dumps(data)

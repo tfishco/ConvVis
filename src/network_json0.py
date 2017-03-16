@@ -2,7 +2,7 @@ import json
 import numpy as np
 
 def get_coords(vert_size_gap, horiz_size_gap, no_columns, layers, layers_size):
-    y_offset = 50
+    y_offset = 30
     x_offset = 250
     dx = x_offset
     dy = y_offset
@@ -64,32 +64,36 @@ def get_json(struct, node_type, value, seperate_conv):
             nodes.append(node)
 # struct = [1, 32, 32, 64, 64, 1, 1, 10]
 # node_type = ['input_0', 'conv_1', 'pool_1','conv_2', 'pool_2', 'fc_1', 'fc_2', 'decision_0']
-# seperate_conv =
+# separated_convdata =
 # separate_conv1
 # separate_conv2
-# indexes_conv1
-# indexes_conv2
-
+    print(struct)
     # Links
     for i in range(len(struct)):
-        if i < len(struct) - 1 and node_type[i + 1] == 'conv_1':
-            brightnesses = seperate_conv['separate_conv' + str(node_type[i + 1].split("_")[1])][0]
-            indexes = seperate_conv['indexes_conv1' + + str(node_type[i + 1].split("_")[1])]
-            for j in range(len(brightnesses)):
-                link = {}
-                print(brightnesses[j])
-                link['source'] = 0 # 1 - 32
-                link['target'] = indexes[j][2] # 33 - 64
-                links.append(link)
-        if i < len(struct) - 1 and node_type[i + 1] == 'conv_1':
-            print(node_type[i + 1])
-            brightnesses = seperate_conv['separate_conv' + str(node_type[i + 1].split("_")[1])][0]
-            np.array(brightnesses)
-            for j in range(len(brightnesses[i])):
-                link = {}
-                link['source'] = 0
-                link['target'] = brightnesses[j][2] # 1 - 32
-                links.append(link)
+        if i < len(struct) - 1:
+            if node_type[i + 1] == 'conv_1':
+                print("conv_1")
+                brightnesses = np.array(seperate_conv['separate_conv1']).squeeze()
+                for j in range(len(brightnesses)):
+                    link = {}
+                    link['source'] = 0 # 1 - 32
+                    link['target'] = brightnesses[j][1] # 33 - 64
+                    links.append(link)
+            if i < len(struct) - 1 and node_type[i + 1] == 'conv_2':
+                print("conv_2")
+                brightnesses = np.array(seperate_conv['separate_conv2']).squeeze()
+                for j in range(len(brightnesses)):
+                    for k in range(len(brightnesses[j])):
+                        link = {}
+                        source = j + 33
+                        target = brightnesses[j][k][1] + 33 + 32
+                        print(source,target)
+                        link['source'] = source
+                        link['target'] = target # 33 - 64
+                        links.append(link)
+            if node_type[i + 1].split("_")[0] == 'decision':
+                print("decision")
+
 
     main['nodes'] = nodes
     main['links'] = links
