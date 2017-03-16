@@ -91,8 +91,8 @@ def get_separate_conv_data(data, threshold):
     #np.round(np.multiply(get_feature_map(feature_list[1], 28, 32), 255), decimals=0)
     sep_1 = np.array([np.array(data[0]).transpose((2,5,0,1,3,4)).squeeze().tolist()])
     sep_2 = np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze()
-    separate['separate_conv1'] = get_highest_layer_activations(threshold,sep_1)
-    separate['separate_conv2'] = get_highest_layer_activations(threshold,sep_2)#np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze().shape()
+    separate['separate_conv1'], separate['separate_conv1_all'] = get_highest_layer_activations(threshold,np.multiply(sep_1,255))
+    separate['separate_conv2'], separate['separate_conv2_all'] = get_highest_layer_activations(threshold,np.multiply(sep_2,255))#np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze().shape()
     return separate
 
 def get_highest_layer_activations(threshold, data):
@@ -110,7 +110,7 @@ def get_highest_layer_activations(threshold, data):
         for j in range(threshold):
             max_vals.append([brightness[i][max_indexes[j]],max_indexes[j]])
         top_brightness.append(max_vals)
-    return top_brightness
+    return top_brightness, brightness
 
 x = tf.placeholder("float", [784])
 
