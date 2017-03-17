@@ -7,13 +7,24 @@ import numpy as np
 import json
 import network_json0 as network_json
 import sys
-
-sys.path.insert(0, 'pre-trained/')
+import os
 
 import classifier
-import cifar_10
 
-dataset = 'cifar'
+if len(sys.argv) == 3:
+    if(sys.argv[1] != 'mnist' and sys.argv[1] != 'cifar'):
+        print("Please use 'mnist' or 'cifar' in dataset selection")
+        quit()
+    else:
+        dataset = sys.argv[1]
+    if os.path.isdir("pre-trained/" + dataset + "/graph_" + dataset + str(sys.argv[2])):
+        iterations = sys.argv[2]
+    else:
+      print("Training iteration does not exist")
+      quit()
+else:
+    print("Please use: sudo python app.py <dataset (mnist/cifar)> <training iterations>")
+    quit()
 
 if dataset == 'mnist':
     mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
@@ -22,6 +33,7 @@ if dataset == 'mnist':
     image_dimensions = 28
 
 elif dataset == 'cifar':
+    import cifar_10
     cifar_10.load_and_preprocess_input(dataset_dir='resource/CIFAR_data')
     test_data = cifar_10.validate_all['data'][:,:,:,None,1]
     test_labels = cifar_10.validate_all['labels']
@@ -96,40 +108,42 @@ def get_fc1_sum(weight_list, area):
         pixel_weights.append(np.sum(np.array(image_weights)))
     data['abs'] = np.divide(np.absolute(np.array(pixel_weights)),8).tolist()
     data['raw'] = np.divide(np.array(pixel_weights),8).tolist()
-
     return data
 
-def get_separate_conv_data(data, threshold):
-    separate = {}
-    #np.round(np.multiply(get_feature_map(feature_list[1], 28, 32), 255), decimals=0)
-    sep_1 = np.array([np.array(data[0]).transpose((2,5,0,1,3,4)).squeeze().tolist()])
-    sep_2 = np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze()
-    separate['separate_conv1'], separate['separate_conv1_all'] = get_highest_layer_activations(threshold,np.multiply(sep_1,255))
-    separate['separate_conv2'], separate['separate_conv2_all'] = get_highest_layer_activations(threshold,np.multiply(sep_2,255))#np.array(data[1]).transpose((2,5,0,1,3,4)).squeeze().shape()
-    return separate
+def get_separate_conv_data(data):
+    conv_layers = []
+    for i in range(len(data)):                  # iterate through conv layers
+        layer = np.array(data[i]).squeeze()
+        if len(layer.shape) < 4:
+            layer = np.array([layer.tolist()])
+        activations = []
+        for j in range(len(layer)):             # iterate through images in conv layers
+            input_activations = np.array(layer[j]).squeeze()
+            activation_brightnesses = []
+            for k in range(len(input_activations)):    #iterate through image activations
+                activation_brightness = get_image_brightness(input_activations[k].flatten())
+                activation_brightnesses.append(activation_brightness)
+            activations.append(activation_brightnesses)
+        conv_layers.append(activations)
+    return conv_layers
+
 
 def get_highest_layer_activations(threshold, data):
-    brightness = []
-    for i in range(len(data)):
-        group_brightness = []
-        for j in range(len(data[i])):
-            val = get_image_brightness(np.array(data[i][j]).flatten())
-            group_brightness.append(val)
-        brightness.append(group_brightness)
     top_brightness = []
-    for i in range(len(brightness)):
-        max_indexes = np.array(brightness[i]).argsort()[-threshold:][::-1]
-        max_vals = []
-        for j in range(threshold):
-            max_vals.append([brightness[i][max_indexes[j]],max_indexes[j]])
-        top_brightness.append(max_vals)
-    return top_brightness, brightness
+    for i in range(len(data)): #iterate through layers
+        layers = []
+        for j in range(len(data[i])): #iterate through images in layers
+            max_indexes = np.array(data[i][j]).argsort()[-threshold:][::-1]
+            max_vals = []
+            for k in range(threshold):
+                max_vals.append([data[i][j][max_indexes[k]], max_indexes[k]])
+            layers.append(max_vals)
+        top_brightness.append(layers)
+    return top_brightness
 
 x = tf.placeholder("float", [image_dimensions * image_dimensions])
 
 sess = tf.Session()
-
-train_iteration = 200
 
 app = Flask(__name__)
 
@@ -140,7 +154,7 @@ def index():
 with tf.variable_scope("conv"):
     _, variables, features , separated_conv = classifier.conv(x, 1.0,image_dimensions)
 saver = tf.train.Saver(variables)
-saver.restore(sess, "pre-trained/" + dataset + "/graph_" + dataset + str(train_iteration) + "/" + dataset + ".ckpt")
+saver.restore(sess, "pre-trained/" + dataset + "/graph_" + dataset + str(iterations) + "/" + dataset + ".ckpt")
 
 
 @app.route("/conv", methods=['POST'])
@@ -155,7 +169,7 @@ def conv():
     data['label'] = np.argmax(label)
     data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
-    separated_conv_data = get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image}), 10)
+    separated_conv_data = get_highest_layer_activations(10,get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image})))
     data['separated_convdata'] = separated_conv_data
     data['struct'], data['no_nodes'] = network_json.get_json(struct[0], struct[1], data['convdata']['log_certainty'], separated_conv_data)
     return json.dumps(data)

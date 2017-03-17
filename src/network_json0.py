@@ -70,24 +70,30 @@ def get_json(struct, node_type, value, seperate_conv):
     # Links
     for i in range(len(struct)):
         if i < len(struct) - 1:
-            if node_type[i + 1] == 'conv_1':
-                brightnesses = np.array(seperate_conv['separate_conv1']).squeeze()
-                for j in range(len(brightnesses)):
-                    link = {}
-                    link['source'] = 0 # 1 - 32
-                    link['target'] = brightnesses[j][1] # 33 - 64
-                    links.append(link)
-            if i < len(struct) - 1 and node_type[i + 1] == 'conv_2':
-                brightnesses = np.array(seperate_conv['separate_conv2']).squeeze()
+            if node_type[i + 1].split("_")[0] == 'conv':
+                brightnesses = np.array(seperate_conv['separate_conv' + str(node_type[i + 1].split("_")[1])]).squeeze()
                 for j in range(len(brightnesses)):
                     for k in range(len(brightnesses[j])):
+                        print(i,j,k,brightnesses[j])
+                        dsrc = 0
+                        for x in range(i):
+                            dsrc += struct[x]
                         link = {}
-                        source = j + 33
-                        target = brightnesses[j][k][1] + 33 + 32
-                        link['source'] = source
-                        link['target'] = target # 33 - 64
+                        link['source'] = dsrc # 1 - 32
+                        link['target'] = brightnesses[j][1] # 33 - 64
                         links.append(link)
-
+            #elif i < len(struct) - 1 and node_type[i + 1] == 'conv_2':
+            #    brightnesses = np.array(seperate_conv['separate_conv2']).squeeze()
+            #    for j in range(len(brightnesses)):
+            #        for k in range(len(brightnesses[j])):
+            #            link = {}
+            #            source = j + 33
+            #            target = brightnesses[j][k][1] + 33 + 32
+            #            link['source'] = source
+            #            link['target'] = target # 33 - 64
+            #            links.append(link)
+            #elif i < len(struct - 3):
+            #    for j in range(len(struct[i])):
     main['nodes'] = nodes
     main['links'] = links
 

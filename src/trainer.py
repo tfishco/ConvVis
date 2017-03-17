@@ -1,28 +1,34 @@
 from tensorflow.examples.tutorials.mnist import input_data
 import tensorflow as tf
+import numpy as np
 import os
 import inspect
 import classifier
-import cifar_10
+import sys
 
-#mnist = input_data.read_data_sets('/src/resource/MNIST_data', one_hot=True)
-
-dataset ='cifar'
-#dataset = 'mnist'
+if len(sys.argv) == 3:
+    if(sys.argv[1] != 'mnist' and sys.argv[1] != 'cifar'):
+        print("Please use 'mnist' or 'cifar' in dataset selection")
+        quit()
+    else:
+        dataset = sys.argv[1]
+    iterations = int(sys.argv[2]) + 1
+else:
+    print("Please use: sudo python app.py <dataset (mnist/cifar)> <training iterations>")
+    quit()
 
 if dataset == 'cifar':
-    image_dimensions = cifar_10.image_width
+    import cifar_10
     cifar_10.load_and_preprocess_input(dataset_dir='resource/CIFAR_data')
-    test_data = cifar_10.validate_all['data'][:,:,:,None,1]
+    image_dimensions = cifar_10.image_width
+    test_data = cifar_10.validate_all['data'][:,:,:,None,1].reshape(-1,image_dimensions * image_dimensions)
     test_labels = cifar_10.validate_all['labels']
     image_dimensions = cifar_10.image_width
-
 elif dataset == 'mnist':
+    mnist = input_data.read_data_sets('/src/resource/MNIST_data', one_hot=True)
     test_data = mnist.test.images
     test_labels = mnist.test.labels
     image_dimensions = 28
-
-cifar_10.load_and_preprocess_input(dataset_dir=cifar_10.dataset_dir)
 
 sess = tf.Session()
 
@@ -41,8 +47,6 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 saver = tf.train.Saver(variables, max_to_keep = 11)
 init_op = tf.initialize_all_variables()
 
-iterations = 201
-
 with tf.Session() as sess:
     sess.run(init_op)
     for i in range(iterations):
@@ -54,7 +58,7 @@ with tf.Session() as sess:
             train_accuracy = accuracy.eval(feed_dict={
                 x:batch[0], y_: batch[1], keep_prob: 1.0})
             print("step %d, training accuracy %g"%(i, train_accuracy))
-            path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + "/" + dataset + "/graph_" + dataset + str(i)
+            path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + "/pre-trained/" + dataset + "/graph_" + dataset + str(i)
             if not os.path.exists(path):
                 os.makedirs(path)
             saver.save(sess, "" + path + "/" + dataset + ".ckpt")

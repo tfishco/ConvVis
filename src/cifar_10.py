@@ -138,13 +138,25 @@ def load_and_preprocess_input(dataset_dir=None):
     train_all['data'], train_all['labels'] = prepare_input(data=trn_all_data, labels=trn_all_labels)
     validate_and_test_data, validate_and_test_labels = prepare_input(data=vldte_all_data, labels=vldte_all_labels)
 
+    train_all['labels'] = format_labels(train_all['labels'])
+
     validate_all['data'] = validate_and_test_data[0:n_validate_samples, :, :, :]
-    validate_all['labels'] = validate_and_test_labels[0:n_validate_samples]
-    test_all['data'] = validate_and_test_data[n_validate_samples:(n_validate_samples+n_test_samples), :, :, :]
-    test_all['labels'] = validate_and_test_labels[n_validate_samples:(n_validate_samples+n_test_samples)]
+    validate_all['labels'] = format_labels(validate_and_test_labels[0:n_validate_samples])
+
+    print(train_all['labels'])
+    print(validate_all['labels'])
 
     #load all label-names
     label_names_for_validation_and_test=unpickle(os.path.join(dataset_dir, 'batches.meta'))['label_names']
+
+def format_labels(label_list):
+    test_labels = []
+    for i in range(len(label_list.tolist())):
+        blank_label = [0] * n_classes
+        blank_label[label_list[i]] = 1
+        test_labels.append(blank_label)
+    return np.array(test_labels)
+
 
 def get_batch(iterator, data, labels):
     data = data[:,:,:,None,1]
