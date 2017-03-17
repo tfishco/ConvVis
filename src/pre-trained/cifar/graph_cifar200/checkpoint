@@ -1,4 +1,0 @@
-model_checkpoint_path: "/Users/tomfisher/DeepVis/src/pre-trained/cifar/graph_cifar200/cifar.ckpt"
-all_model_checkpoint_paths: "/Users/tomfisher/DeepVis/src/pre-trained/cifar/graph_cifar0/cifar.ckpt"
-all_model_checkpoint_paths: "/Users/tomfisher/DeepVis/src/pre-trained/cifar/graph_cifar100/cifar.ckpt"
-all_model_checkpoint_paths: "/Users/tomfisher/DeepVis/src/pre-trained/cifar/graph_cifar200/cifar.ckpt"
