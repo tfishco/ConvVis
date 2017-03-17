@@ -25,7 +25,7 @@ def get_coords(vert_size_gap, horiz_size_gap, no_columns, layers, layers_size):
 # struct = [1, 32, 32, 64, 64, 1, 1, 10]
 # node_type = ['conv_1', 'pool_1','conv_2', 'pool_2', 'fc_1', 'fc_2', 'decision']
 
-def get_json(struct, node_type, value, seperate_conv):
+def get_json(struct, node_type, value, separate_conv):
     main = {}
     nodes = []
     links = []
@@ -70,31 +70,34 @@ def get_json(struct, node_type, value, seperate_conv):
     # Links
     for i in range(len(struct)):
         if i < len(struct) - 1:
+            index = int(node_type[i + 1].split("_")[1])
+            layer = separate_conv[index]
             if node_type[i + 1].split("_")[0] == 'conv':
-                brightnesses = np.array(seperate_conv['separate_conv' + str(node_type[i + 1].split("_")[1])]).squeeze()
-                for j in range(len(brightnesses)):
-                    for k in range(len(brightnesses[j])):
-                        print(i,j,k,brightnesses[j])
-                        dsrc = 0
-                        for x in range(i):
-                            dsrc += struct[x]
+                layer = separate_conv[index]
+                for j in range(1, struct[i] + 1):
+                    for k in range(len(layer[j - 1])):
                         link = {}
-                        link['source'] = dsrc # 1 - 32
-                        link['target'] = brightnesses[j][1] # 33 - 64
+                        link['source'] = (j - 1) + struct[i] + (1 * i) - 1
+                        link['target'] = struct[i] + struct[i] + (layer[j - 1][k][1]) + (1 * i) - 1
                         links.append(link)
-            #elif i < len(struct) - 1 and node_type[i + 1] == 'conv_2':
-            #    brightnesses = np.array(seperate_conv['separate_conv2']).squeeze()
-            #    for j in range(len(brightnesses)):
-            #        for k in range(len(brightnesses[j])):
-            #            link = {}
-            #            source = j + 33
-            #            target = brightnesses[j][k][1] + 33 + 32
-            #            link['source'] = source
-            #            link['target'] = target # 33 - 64
-            #            links.append(link)
-            #elif i < len(struct - 3):
-            #    for j in range(len(struct[i])):
+            if node_type[i + 1].split("_")[0] == 'pool':
+                first_instances = get_first_instance_index(layer)
+                print(np.sort(np.array(first_instances)))
+                for j in first_instances:
+                    link = {}
+                    source = j + struct[i] * index + 1
+                    target = j + struct[i] + struct[i] * index + 1
+                    link['source'] = source
+                    link['target'] = target
+                    links.append(link)
     main['nodes'] = nodes
     main['links'] = links
-
     return json.dumps(main) , struct
+
+def get_first_instance_index(data):
+    array = []
+    for i in range(len(data)):
+        for j in range(len(data[i])):
+            if not data[i][j][1] in array:
+                array.append(data[i][j][1])
+    return array
