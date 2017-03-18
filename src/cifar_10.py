@@ -143,6 +143,9 @@ def load_and_preprocess_input(dataset_dir=None):
     validate_all['data'] = validate_and_test_data[0:n_validate_samples, :, :, :]
     validate_all['labels'] = format_labels(validate_and_test_labels[0:n_validate_samples])
 
+    print(train_all['labels'])
+    print(validate_all['labels'])
+
     #load all label-names
     label_names_for_validation_and_test=unpickle(os.path.join(dataset_dir, 'batches.meta'))['label_names']
 

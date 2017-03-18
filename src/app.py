@@ -182,7 +182,7 @@ def conv():
     data['label'] = np.argmax(label)
     data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
-    separated_conv_data = get_highest_layer_activations(10,get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image})))
+    separated_conv_data = get_highest_layer_activations(20,get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image})))
     data['separated_convdata'] = separated_conv_data
     data['struct'], data['no_nodes'] = network_json.get_json(struct[0], struct[1], data['convdata']['log_certainty'], separated_conv_data)
     return json.dumps(data)
