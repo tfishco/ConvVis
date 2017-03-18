@@ -1,7 +1,7 @@
 import json
 import numpy as np
 
-def get_coords(vert_size_gap, horiz_size_gap, no_columns, layers, layers_size):
+def get_coords(vert_size_gap, horiz_size_gap, no_columns, layers, layers_size, height_offset):
 	y_offset = 30
 	x_offset = 250
 	dx = x_offset
@@ -14,9 +14,9 @@ def get_coords(vert_size_gap, horiz_size_gap, no_columns, layers, layers_size):
 		for j in range(layers[i]):
 			if j % (no_rows) == 0:
 				dx += horiz_size_gap + layers_size[i]
-				dy = y_offset
+				dy = y_offset + height_offset[i]
 			else :
-				dy += vert_size_gap + layers_size[i]
+				dy += vert_size_gap + layers_size[i] + height_offset[i]
 			x_vals.append(dx)
 			y_vals.append(dy)
 		dx += layer_offset
@@ -33,7 +33,7 @@ def get_json(struct, node_type, value, separate_conv):
 	pixel_count = 60
 	value_count = 0
 	count = 0
-	x_vals, y_vals = get_coords(25, 20, 4, [32,32,64,64], [28,14,14,7])
+	x_vals, y_vals = get_coords(25, 20, 4, [32,32,64,64], [28,14,14,7], [22,35,0,7])
 	for i in range(len(struct)):
 		for j in range(struct[i]):
 			node = {}
