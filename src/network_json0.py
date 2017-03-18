@@ -71,8 +71,25 @@ def get_json(struct, node_type, value, separate_conv):
     for i in range(len(struct)):
         if i < len(struct) - 1:
             index = int(node_type[i + 1].split("_")[1])
-            layer = separate_conv[index]
-            if node_type[i + 1].split("_")[0] == 'conv':
+            if node_type[i + 1].split("_")[0] == 'decision':
+                for j in range(1, struct[i + 1] + 1):
+                    link = {}
+                    link['source'] = np.sum(struct) - struct[i + 1] - 1
+                    link['target'] = np.sum(struct) - struct[i + 1] + (j - 1)
+                    links.append(link)
+            elif node_type[i + 1].split("_")[0] == 'fc':
+                if index == 1:
+                    link = {}
+                    link['source'] = 193
+                    link['target'] = 194
+                    links.append(link)
+                else:
+                    for j in range(1, struct[i] + 1):
+                        link = {}
+                        link['source'] = struct[i - 1] + struct[i - 1] + j + (struct[i] * index)
+                        link['target'] = 193
+                        links.append(link)
+            elif node_type[i + 1].split("_")[0] == 'conv':
                 layer = separate_conv[index]
                 for j in range(1, struct[i] + 1):
                     for k in range(len(layer[j - 1])):
@@ -80,8 +97,8 @@ def get_json(struct, node_type, value, separate_conv):
                         link['source'] = (j - 1) + struct[i] + (1 * i) - 1
                         link['target'] = struct[i] + struct[i] + (layer[j - 1][k][1]) + (1 * i) - 1
                         links.append(link)
-            if node_type[i + 1].split("_")[0] == 'pool':
-                first_instances = get_first_instance_index(layer)
+            elif node_type[i + 1].split("_")[0] == 'pool':
+                first_instances = get_first_instance_index(separate_conv[index])
                 for j in first_instances:
                     link = {}
                     source = j + struct[i] * index + 1
