@@ -148,12 +148,12 @@ function gen_graph(data) {
 
   var decisionLabel = d3.selectAll(".node-decision")
     .append("text")
-    .attr("dx", 30)
+    .attr("dx", 20)
     .attr("dy", ".35em")
     .text(function(d) {
       var name = d.name.split("_");
       if (name[0] == "7") {
-        return name[1];
+        return data.actual_class_labels[name[1]];
       }
     })
     .style("text-decoration", function(d) {
