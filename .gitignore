@@ -1,2 +1,4 @@
 src/pre-trained/*
 src/resource/*
+*.pyc
+*.DS_Store
