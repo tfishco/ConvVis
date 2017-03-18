@@ -11,34 +11,6 @@ import os
 
 import classifier
 
-if len(sys.argv) == 3:
-    if(sys.argv[1] != 'mnist' and sys.argv[1] != 'cifar'):
-        print("Please use 'mnist' or 'cifar' in dataset selection")
-        quit()
-    else:
-        dataset = sys.argv[1]
-    if os.path.isdir("pre-trained/" + dataset + "/graph_" + dataset + str(sys.argv[2])):
-        iterations = sys.argv[2]
-    else:
-      print("Training iteration does not exist")
-      quit()
-else:
-    print("Please use: sudo python app.py <dataset (mnist/cifar)> <training iterations>")
-    quit()
-
-if dataset == 'mnist':
-    mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
-    test_data = mnist.test.images
-    test_labels = mnist.test.labels
-    image_dimensions = 28
-
-elif dataset == 'cifar':
-    import cifar_10
-    cifar_10.load_and_preprocess_input(dataset_dir='resource/CIFAR_data')
-    test_data = cifar_10.validate_all['data'][:,:,:,None,1]
-    test_labels = cifar_10.validate_all['labels']
-    image_dimensions = cifar_10.image_width
-
 def get_image_brightness(image):
     total_brightness = 0
     for i in range(len(image)):
@@ -154,6 +126,36 @@ def get_highest_layer_activations(threshold, data):
         top_brightness.append(layers)
     return top_brightness
 
+if len(sys.argv) == 3:
+    if(sys.argv[1] != 'mnist' and sys.argv[1] != 'cifar'):
+        print("Please use 'mnist' or 'cifar' in dataset selection")
+        quit()
+    else:
+        dataset = sys.argv[1]
+    if os.path.isdir("pre-trained/" + dataset + "/graph_" + dataset + str(sys.argv[2])):
+        iterations = sys.argv[2]
+    else:
+      print("Training iteration does not exist")
+      quit()
+else:
+    print("Please use: sudo python app.py <dataset (mnist/cifar)> <training iterations>")
+    quit()
+
+if dataset == 'mnist':
+    mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
+    test_data = mnist.test.images
+    test_labels = mnist.test.labels
+    actual_class_labels = list(range(10))
+    image_dimensions = 28
+
+elif dataset == 'cifar':
+    import cifar_10
+    cifar_10.load_and_preprocess_input(dataset_dir='resource/CIFAR_data')
+    test_data = cifar_10.validate_all['data'][:,:,:,None,1]
+    test_labels = cifar_10.validate_all['labels']
+    image_dimensions = cifar_10.image_width
+    actual_class_labels = cifar_10.actual_class_labels
+
 x = tf.placeholder("float", [image_dimensions * image_dimensions])
 
 sess = tf.Session()
@@ -172,17 +174,19 @@ saver.restore(sess, "pre-trained/" + dataset + "/graph_" + dataset + str(iterati
 
 @app.route("/conv", methods=['POST'])
 def conv():
-
+    #Recieved from post
     index = int(request.form['val'])
     struct = json.loads(request.form['struct'])
+    #From test dataset
     image = test_data[index].reshape((image_dimensions * image_dimensions,))
     label = test_labels[index]
-
+    #JSON Construction to be sent to front end
     data = {}
     data['label'] = np.argmax(label)
+    data['actual_class_labels'] = actual_class_labels
     data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
-    separated_conv_data = get_highest_layer_activations(20,get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image})))
+    separated_conv_data = get_highest_layer_activations(10,get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image})))
     data['separated_convdata'] = separated_conv_data
     data['struct'], data['no_nodes'] = network_json.get_json(struct[0], struct[1], data['convdata']['log_certainty'], separated_conv_data)
     return json.dumps(data)
