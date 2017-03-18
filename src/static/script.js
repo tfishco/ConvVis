@@ -62,7 +62,7 @@ function gen_graph(data) {
     .data(graph.links)
     .enter().append("line")
     .attr("class", "link")
-    .attr("stroke-width", 3)
+    .attr("stroke-width", 2)
     .attr("stroke", "orangered");
 
   var node = svg.selectAll(".node")
@@ -86,7 +86,7 @@ function gen_graph(data) {
     d3.select("#weightThresholdValue").text(" " + val);
     d3.select("#weightThreshold").property("value", val);
     svg.selectAll(".link")
-      /*.attr("opacity", function(d) {
+      .attr("opacity", function(d) {
         var op;
         if (parseInt(d.target.name.split("_")[0]) == 7) {
           op = classopacity(d.target.value);
@@ -100,8 +100,7 @@ function gen_graph(data) {
         } else {
           return 0.2;
         }
-      })*/
-    ;
+      });
   }
 
   var image = d3.selectAll(".node-image")
