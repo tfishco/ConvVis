@@ -82,7 +82,6 @@ def get_json(struct, node_type, value, separate_conv):
                         links.append(link)
             if node_type[i + 1].split("_")[0] == 'pool':
                 first_instances = get_first_instance_index(layer)
-                print(np.sort(np.array(first_instances)))
                 for j in first_instances:
                     link = {}
                     source = j + struct[i] * index + 1
