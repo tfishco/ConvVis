@@ -15,7 +15,7 @@ def get_image_brightness(image):
     total_brightness = 0
     for i in range(len(image)):
         total_brightness += image[i]
-    return total_brightness / len(image)
+    return total_brightness
 
 def get_feature_json(features): # takes in contents of different layers in CNN e.g. conv1 or pool2
     feature_list = []
@@ -66,8 +66,9 @@ def get_conv_data(feature_list):
     return data
 
 def get_weight_data(weights_list):
+    print(len(weights_list[4]))
     data = {}
-    data['fc1'] = get_fc1_sum(weights_list[4].tolist(), image_dimensions * image_dimensions)
+    data['fc1'] = get_fc1_sum(weights_list[4].tolist(), image_dimensions / 4 * image_dimensions / 4)
     return data
 
 def get_fc1_sum(weight_list, area):
@@ -186,7 +187,7 @@ def conv():
     data['actual_class_labels'] = actual_class_labels
     data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
-    separated_conv_data = get_highest_layer_activations(10,get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image})))
+    separated_conv_data = get_highest_layer_activations(10, get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image})))
     data['separated_convdata'] = separated_conv_data
     data['struct'], data['no_nodes'] = network_json.get_json(struct[0], struct[1], data['convdata']['log_certainty'], separated_conv_data)
     return json.dumps(data)
