@@ -41,6 +41,9 @@ function gen_graph(data) {
 
   var color = d3.scale.category20();
 
+  temp_arr_0 = getIndexesAndValues(data.separated_convdata[0]);
+  temp_arr_1 = getIndexesAndValues(data.separated_convdata[1]);
+
   graph = JSON.parse(data.struct)
 
   force.nodes(graph.nodes)
@@ -52,9 +55,7 @@ function gen_graph(data) {
       .log_certainty)])
     .range([0.00, 1.00]);
 
-  function getOpacity(value, data) {
-    min = Math.min.apply(null, data)
-    max = Math.max.apply(null, data)
+  function getOpacity(value, min, max) {
     return d3.scale.linear().domain([min, max])
       .range([0.00, 1.00])(value);
   }
@@ -83,58 +84,83 @@ function gen_graph(data) {
     .on('click', nodeClick)
     .on('dblclick', connectedNodes);
 
-  update(0.5);
+  update(0);
+
+  function thresholdVal(val, thresh) {
+    if (thresh <= val) {
+      return val;
+    } else {
+      return 0.1;
+    }
+  }
 
   // fully connected layer should flow back to conv layer
-
 
   function update(val) {
     d3.select("#weightThresholdValue").text(" " + val);
     d3.select("#weightThreshold").property("value", val);
-    temp_arr_0 = getIndexesAndValues(data.separated_convdata[0]);
-    temp_arr_1 = getIndexesAndValues(data.separated_convdata[1]);
     svg.selectAll(".link")
-      .attr("opacity", 1);
-    /*function(d) {
-            var source = d.source.name.split("_");
-            var target = d.target.name.split("_");
-            var op;
-            if (target[0] == 1) {
-              indexes = temp_arr_0[0];
-              values = temp_arr_0[1];
-              if (indexes.includes(parseInt(target[1]))) {
-
-                value = values[indexes.indexOf(parseInt(target[1]))];
-                op = getOpacity(value, values) * 4;
-                console.log(op, value);
-              }
+      .attr("opacity",
+        function(d) {
+          var source = d.source.name.split("_");
+          var target = d.target.name.split("_");
+          var op;
+          /*if (target[0] == 1 || target[0] == 2) {
+            op = 1;
+          }*/
+          if (target[0] == 1) {
+            indexes = temp_arr_0[parseInt(source[1])][0];
+            values = temp_arr_0[parseInt(source[1])][1];
+            if (indexes.includes(parseInt(target[1]))) {
+              value = values[indexes.indexOf(parseInt(target[1]))];
+              op = getOpacity(value, 0, Math.max.apply(null, values));
             }
-            if (val <= op) {
-              return op;
-            } else {
-              return 0.1;
+          } else if (target[0] == 2) {
+            indexes = temp_arr_0[0][0];
+            values = temp_arr_0[0][1];
+            if (indexes.includes(parseInt(target[1]))) {
+              value = values[indexes.indexOf(parseInt(target[1]))];
+              op = getOpacity(value, -1, Math.max.apply(null, values));
             }
-          });*/
+          } else if (target[0] == 3) {
+            indexes = temp_arr_1[parseInt(source[1])][0];
+            values = temp_arr_1[parseInt(source[1])][1];
+            if (indexes.includes(parseInt(target[1]))) {
+              value = values[indexes.indexOf(parseInt(target[1]))];
+              op = thresholdVal(getOpacity(value, 0, Math.max.apply(null,
+                values)), val);
+            }
+          } else if (target[0] == 4) {
+            op = 0.1;
+          } else if (target[0] == 5) {
+            values = data.weightdata.fc1[weightType];
+            op = thresholdVal(getOpacity(values[source[1]], 0, Math.max.apply(
+              null,
+              values)), val);
+          } else if (target[0] == 7) {
+            values = data.convdata.log_certainty;
+            op = thresholdVal(getOpacity(values[target[1]], 0, Math.max.apply(
+              null,
+              values)), val);
+          }
+          return op;
+        });
   }
 
   function getIndexesAndValues(data) {
-    var indexes = [];
-    var values = [];
+    var images = [];
     for (i = 0; i < data.length; i++) {
+      var indexes = [];
+      var values = [];
       for (j = 0; j < data[i].length; j++) {
         read_index = data[i][j][1];
         read_value = data[i][j][0];
-        if (data[i].length != 0) {
-          if (!indexes.includes(data[i][j][1])) {
-            indexes.push(read_index);
-            values.push(read_value);
-          } else if (values[indexes.indexOf(read_index)] < read_value) {
-            values[indexes.indexOf(read_index)] = read_value;
-          }
-        }
+        indexes.push(read_index);
+        values.push(read_value);
       }
+      images.push([indexes, values]);
     }
-    return [indexes, values];
+    return images;
   }
 
   var image = d3.selectAll(".node-image")
