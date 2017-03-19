@@ -1,7 +1,6 @@
 function gen_graph(data) {
 
-  var weightType = "raw";
-  //var weightType = "abs";
+  var weightType = "abs"; // abs or raw
 
   function reset() {
     d3.selectAll("svg").remove();
@@ -51,18 +50,22 @@ function gen_graph(data) {
   var classopacity = d3.scale.linear().domain([Math.min.apply(null, data.convdata
       .log_certainty), Math.max.apply(null, data.convdata
       .log_certainty)])
-    .range([0, 1.0]);
+    .range([0.00, 1.00]);
 
-  var linkopacity = d3.scale.linear().domain([Math.min.apply(null, data.weightdata
-      .fc1[weightType]), Math.max.apply(null, data.weightdata
-      .fc1[weightType])])
-    .range([0, 1.0]);
+  function getOpacity(value, data) {
+    min = Math.min.apply(null, data)
+    max = Math.max.apply(null, data)
+    return d3.scale.linear().domain([min, max])
+      .range([0.00, 1.00])(value);
+  }
 
   var link = svg.selectAll(".link")
     .data(graph.links)
     .enter().append("line")
     .attr("class", "link")
-    .attr("stroke-width", 2)
+    .attr("stroke-width", function(d) {
+      return 2;
+    })
     .attr("stroke", "orangered");
 
   var node = svg.selectAll(".node")
@@ -80,27 +83,58 @@ function gen_graph(data) {
     .on('click', nodeClick)
     .on('dblclick', connectedNodes);
 
-  update(0);
+  update(0.5);
+
+  // fully connected layer should flow back to conv layer
+
 
   function update(val) {
     d3.select("#weightThresholdValue").text(" " + val);
     d3.select("#weightThreshold").property("value", val);
+    temp_arr_0 = getIndexesAndValues(data.separated_convdata[0]);
+    temp_arr_1 = getIndexesAndValues(data.separated_convdata[1]);
     svg.selectAll(".link")
-      .attr("opacity", function(d) {
-        var op;
-        if (parseInt(d.target.name.split("_")[0]) == 7) {
-          op = classopacity(d.target.value);
-        } else if (parseInt(d.target.name.split("_")[0]) == 6) {
-          op = 1;
-        } else if (parseInt(d.target.name.split("_")[0]) <= 5) {
-          op = linkopacity(this.getAttribute("stroke-width"));
+      .attr("opacity", 1);
+    /*function(d) {
+            var source = d.source.name.split("_");
+            var target = d.target.name.split("_");
+            var op;
+            if (target[0] == 1) {
+              indexes = temp_arr_0[0];
+              values = temp_arr_0[1];
+              if (indexes.includes(parseInt(target[1]))) {
+
+                value = values[indexes.indexOf(parseInt(target[1]))];
+                op = getOpacity(value, values) * 4;
+                console.log(op, value);
+              }
+            }
+            if (val <= op) {
+              return op;
+            } else {
+              return 0.1;
+            }
+          });*/
+  }
+
+  function getIndexesAndValues(data) {
+    var indexes = [];
+    var values = [];
+    for (i = 0; i < data.length; i++) {
+      for (j = 0; j < data[i].length; j++) {
+        read_index = data[i][j][1];
+        read_value = data[i][j][0];
+        if (data[i].length != 0) {
+          if (!indexes.includes(data[i][j][1])) {
+            indexes.push(read_index);
+            values.push(read_value);
+          } else if (values[indexes.indexOf(read_index)] < read_value) {
+            values[indexes.indexOf(read_index)] = read_value;
+          }
         }
-        if (val <= op) {
-          return 1;
-        } else {
-          return 0.2;
-        }
-      });
+      }
+    }
+    return [indexes, values];
   }
 
   var image = d3.selectAll(".node-image")
