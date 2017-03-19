@@ -105,7 +105,7 @@ def get_prev_index(data):
     indexes = []
     for i in range(len(data)):
         for j in range(len(data[i])):
-            indexes.append(data[i][j][1])
+            indexes.append(data[i][j])
     return indexes
 
 def get_highest_layer_activations(threshold, data):
@@ -117,12 +117,12 @@ def get_highest_layer_activations(threshold, data):
             max_vals = []
             if i < 1:
                 for k in range(threshold):
-                    max_vals.append([data[i][j][max_indexes[k]], max_indexes[k]])
+                    max_vals.append(max_indexes[k])
             else:
                 prev_indexes = get_prev_index(top_brightness[i - 1])
                 for k in range(threshold):
                     if j in prev_indexes:
-                        max_vals.append([data[i][j][max_indexes[k]], max_indexes[k]])
+                        max_vals.append(max_indexes[k])
             layers.append(max_vals)
         top_brightness.append(layers)
     return top_brightness
@@ -187,8 +187,8 @@ def conv():
     data['actual_class_labels'] = actual_class_labels
     data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
-    separated_conv_data = get_highest_layer_activations(10, get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image})))
-    data['separated_convdata'] = separated_conv_data
+    separated_conv_data = get_highest_layer_activations(10,get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image})))
+    data['adjacency_matrix'] = separated_conv_data
     data['struct'], data['no_nodes'] = network_json.get_json(struct[0], struct[1], data['convdata']['log_certainty'], separated_conv_data)
     return json.dumps(data)
 

@@ -1,6 +1,6 @@
 function gen_graph(data) {
 
-  var weightType = "abs"; // abs or raw
+  var weightType = "raw"; // abs or raw
 
   function reset() {
     d3.selectAll("svg").remove();
@@ -41,9 +41,6 @@ function gen_graph(data) {
 
   var color = d3.scale.category20();
 
-  temp_arr_0 = getIndexesAndValues(data.separated_convdata[0]);
-  temp_arr_1 = getIndexesAndValues(data.separated_convdata[1]);
-
   graph = JSON.parse(data.struct)
 
   force.nodes(graph.nodes)
@@ -53,7 +50,7 @@ function gen_graph(data) {
   var classopacity = d3.scale.linear().domain([Math.min.apply(null, data.convdata
       .log_certainty), Math.max.apply(null, data.convdata
       .log_certainty)])
-    .range([0.00, 1.00]);
+    .range([0.0, 1.0]);
 
   function getOpacity(value, min, max) {
     return d3.scale.linear().domain([min, max])
@@ -86,11 +83,20 @@ function gen_graph(data) {
 
   update(0);
 
-  function thresholdVal(val, thresh) {
-    if (thresh <= val) {
-      return val;
+  function thresholdValue(value, threshold) {
+    if (threshold <= value) {
+      return 1;
     } else {
       return 0.1;
+    }
+  }
+
+  var paths = generatePaths() {
+    for (i = 0; i < data.no_nodes.length - 3; i++) { // Layers
+      var path = []
+      for (j = 0; j < data.no_nodes[i]; j++) { // Images per layer
+        path.append(j);
+      }
     }
   }
 
@@ -104,46 +110,32 @@ function gen_graph(data) {
         function(d) {
           var source = d.source.name.split("_");
           var target = d.target.name.split("_");
+          weights = data.weightdata.fc1[weightType];
           var op;
-          /*if (target[0] == 1 || target[0] == 2) {
-            op = 1;
-          }*/
-          if (target[0] == 1) {
-            indexes = temp_arr_0[parseInt(source[1])][0];
-            values = temp_arr_0[parseInt(source[1])][1];
-            if (indexes.includes(parseInt(target[1]))) {
-              value = values[indexes.indexOf(parseInt(target[1]))];
-              op = getOpacity(value, 0, Math.max.apply(null, values));
-            }
-          } else if (target[0] == 2) {
-            indexes = temp_arr_0[0][0];
-            values = temp_arr_0[0][1];
-            if (indexes.includes(parseInt(target[1]))) {
-              value = values[indexes.indexOf(parseInt(target[1]))];
-              op = getOpacity(value, -1, Math.max.apply(null, values));
-            }
-          } else if (target[0] == 3) {
-            indexes = temp_arr_1[parseInt(source[1])][0];
-            values = temp_arr_1[parseInt(source[1])][1];
-            if (indexes.includes(parseInt(target[1]))) {
-              value = values[indexes.indexOf(parseInt(target[1]))];
-              op = thresholdVal(getOpacity(value, 0, Math.max.apply(null,
-                values)), val);
-            }
-          } else if (target[0] == 4) {
-            op = 0.1;
+          if (target[0] == 7) {
+            return thresholdValue(getOpacity(d.target.value, Math.min.apply(
+              null, data.convdata
+              .log_certainty), Math.max.apply(null, data.convdata
+              .log_certainty)), val);
+          } else if (target[0] == 6) {
+            return 1;
           } else if (target[0] == 5) {
-            values = data.weightdata.fc1[weightType];
-            op = thresholdVal(getOpacity(values[source[1]], 0, Math.max.apply(
-              null,
-              values)), val);
-          } else if (target[0] == 7) {
-            values = data.convdata.log_certainty;
-            op = thresholdVal(getOpacity(values[target[1]], 0, Math.max.apply(
-              null,
-              values)), val);
+            return thresholdValue(getOpacity(weights[parseInt(source[1])], Math
+              .min.apply(null,
+                weights), Math.max
+              .apply(null, weights)), val);
+          } else if (target[0] == 4) {
+            adj_mat = data.adjacency_matrix[1]
+            for (i = 0; i < adj_mat.length; i++) {
+              if (adj_mat[i].indexOf(parseInt(target[1])) > -1) {
+                op = getOpacity(weights[target[1]],
+                  Math.min.apply(null, weights),
+                  Math.max.apply(null, weights));
+                return thresholdValue(op, val);
+              }
+            }
           }
-          return op;
+          return 0.1;
         });
   }
 
