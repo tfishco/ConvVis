@@ -96,8 +96,31 @@ function gen_graph(data) {
       var path = []
       for (j = 0; j < data.no_nodes[i]; j++) { // Images per layer
         path.append(j);
+  function getDistance(targetId) {
+    var distances = [];
+    var jsonData = JSON.parse(data.struct).links;
+    for (i = 0; i < jsonData.length; i++) {
+      if (jsonData[i].target == targetId) {
+        distances.push(jsonData[i].source);
       }
     }
+    return distances;
+  };
+
+  function DFS(target) {
+    var sourceId = getDistance(target[target.length - 1]);
+    if (sourceId.length == 0) {
+      paths.push(target);
+    }
+    for (var i = 0; i < sourceId.length; i++) {
+      var copy = target.slice(0);
+      copy.push(sourceId[i]);
+      DFS(copy);
+    }
+  };
+
+  var paths = [];
+  DFS([193]);
   }
 
   // fully connected layer should flow back to conv layer
