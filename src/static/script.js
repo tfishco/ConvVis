@@ -62,7 +62,7 @@ function gen_graph(data) {
     .enter().append("line")
     .attr("class", "link")
     .attr("stroke-width", function(d) {
-      return 2;
+      return 5;
     })
     .attr("stroke", "orangered");
 
@@ -81,8 +81,6 @@ function gen_graph(data) {
     .on('click', nodeClick)
     .on('dblclick', connectedNodes);
 
-  update(0);
-
   function thresholdValue(value, threshold) {
     if (threshold <= value) {
       return 1;
@@ -91,11 +89,6 @@ function gen_graph(data) {
     }
   }
 
-  var paths = generatePaths() {
-    for (i = 0; i < data.no_nodes.length - 3; i++) { // Layers
-      var path = []
-      for (j = 0; j < data.no_nodes[i]; j++) { // Images per layer
-        path.append(j);
   function getDistance(targetId) {
     var distances = [];
     var jsonData = JSON.parse(data.struct).links;
@@ -121,45 +114,44 @@ function gen_graph(data) {
 
   var paths = [];
   DFS([193]);
+
+
+
+  function assignValues() {
+    var weights = data.weightdata.fc1[weightType];
+    links = svg.selectAll(".link")
+      .attr("weight", function(d) {
+        var source = d.source.name.split("_");
+        var target = d.target.name.split("_");
+        if (parseInt(source[0]) == 2) {
+          return getOpacity(weights[parseInt(target[1])],
+            Math.min.apply(null, weights), Math.max.apply(null, weights)
+          );
+        } else if (parseInt(source[0]) == 3) {
+          return getOpacity(weights[parseInt(source[1])],
+            Math.min.apply(null, weights), Math.max.apply(null, weights));
+        } else if (source[0] == 4) {
+          return getOpacity(weights[parseInt(source[1])],
+            Math.min.apply(null, weights), Math.max.apply(null, weights));
+        } else if (source[0] == 5) {
+          return 1;
+        } else if (source[0] == 6) {
+          return classopacity(data.convdata.log_certainty[parseInt(target[1])]);
+        }
+      });
   }
+
+  assignValues();
+  update(0.5);
 
   // fully connected layer should flow back to conv layer
 
   function update(val) {
     d3.select("#weightThresholdValue").text(" " + val);
     d3.select("#weightThreshold").property("value", val);
-    svg.selectAll(".link")
-      .attr("opacity",
-        function(d) {
-          var source = d.source.name.split("_");
-          var target = d.target.name.split("_");
-          weights = data.weightdata.fc1[weightType];
-          var op;
-          if (target[0] == 7) {
-            return thresholdValue(getOpacity(d.target.value, Math.min.apply(
-              null, data.convdata
-              .log_certainty), Math.max.apply(null, data.convdata
-              .log_certainty)), val);
-          } else if (target[0] == 6) {
-            return 1;
-          } else if (target[0] == 5) {
-            return thresholdValue(getOpacity(weights[parseInt(source[1])], Math
-              .min.apply(null,
-                weights), Math.max
-              .apply(null, weights)), val);
-          } else if (target[0] == 4) {
-            adj_mat = data.adjacency_matrix[1]
-            for (i = 0; i < adj_mat.length; i++) {
-              if (adj_mat[i].indexOf(parseInt(target[1])) > -1) {
-                op = getOpacity(weights[target[1]],
-                  Math.min.apply(null, weights),
-                  Math.max.apply(null, weights));
-                return thresholdValue(op, val);
-              }
-            }
-          }
-          return 0.1;
-        });
+    d3.selectAll(".link").attr("opacity", function(d) {
+      return thresholdValue(d3.select(this).attr("weight"), val)
+    });
   }
 
   function getIndexesAndValues(data) {
@@ -257,7 +249,7 @@ function gen_graph(data) {
     });
   });
 
-  init();
+
 
   var toggle = 0;
 
@@ -269,10 +261,6 @@ function gen_graph(data) {
     linkedByIndex[d.source.index + "," + d.target.index] = 1;
   });
 
-  function init() {
-    var nodes = d3.selectAll("image")[0];
-    toImage(data.convdata.features[1]["0"].feature_0, nodes[0]);
-  }
 
   function toImage(data, node) {
     var buffer = new Uint8ClampedArray(data);
@@ -330,7 +318,6 @@ function gen_graph(data) {
     } else {
       node.attr("opacity", 1);
       update(document.getElementById("weightThreshold").value);
-      console.log(document.getElementById("weightThreshold").value);
       toggle = 0;
     }
   }
