@@ -17,7 +17,7 @@ def conv(x, keep_prob, image_dimensions):
             new = []
             for j in range(W[:].get_shape()[3]):
                 single_W = image_W[:,:,:,None,j]
-                conv = conv2d(single_x, single_W)
+                conv = tf.nn.relu(conv2d(single_x, single_W))
                 new.append(conv)
             convolutions.append(new)
         return convolutions

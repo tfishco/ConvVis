@@ -1,7 +1,6 @@
 function gen_graph(data) {
 
-  var weightType = "raw";
-  //var weightType = "abs";
+  var weightType = "raw"; // abs or raw
 
   function reset() {
     d3.selectAll("svg").remove();
@@ -51,18 +50,20 @@ function gen_graph(data) {
   var classopacity = d3.scale.linear().domain([Math.min.apply(null, data.convdata
       .log_certainty), Math.max.apply(null, data.convdata
       .log_certainty)])
-    .range([0, 1.0]);
+    .range([0.0, 1.0]);
 
-  var linkopacity = d3.scale.linear().domain([Math.min.apply(null, data.weightdata
-      .fc1[weightType]), Math.max.apply(null, data.weightdata
-      .fc1[weightType])])
-    .range([0, 1.0]);
+  function getOpacity(value, min, max) {
+    return d3.scale.linear().domain([min, max])
+      .range([0.00, 1.00])(value);
+  }
 
   var link = svg.selectAll(".link")
     .data(graph.links)
     .enter().append("line")
     .attr("class", "link")
-    .attr("stroke-width", 2)
+    .attr("stroke-width", function(d) {
+      return 5;
+    })
     .attr("stroke", "orangered");
 
   var node = svg.selectAll(".node")
@@ -80,27 +81,93 @@ function gen_graph(data) {
     .on('click', nodeClick)
     .on('dblclick', connectedNodes);
 
-  update(0);
+  function thresholdValue(value, threshold) {
+    if (threshold <= value) {
+      return 1;
+    } else {
+      return 0.1;
+    }
+  }
+
+  function getDistance(targetId) {
+    var distances = [];
+    var jsonData = JSON.parse(data.struct).links;
+    for (i = 0; i < jsonData.length; i++) {
+      if (jsonData[i].target == targetId) {
+        distances.push(jsonData[i].source);
+      }
+    }
+    return distances;
+  };
+
+  function DFS(target) {
+    var sourceId = getDistance(target[target.length - 1]);
+    if (sourceId.length == 0) {
+      paths.push(target);
+    }
+    for (var i = 0; i < sourceId.length; i++) {
+      var copy = target.slice(0);
+      copy.push(sourceId[i]);
+      DFS(copy);
+    }
+  };
+
+  var paths = [];
+  DFS([193]);
+
+
+
+  function assignValues() {
+    var weights = data.weightdata.fc1[weightType];
+    links = svg.selectAll(".link")
+      .attr("weight", function(d) {
+        var source = d.source.name.split("_");
+        var target = d.target.name.split("_");
+        if (parseInt(source[0]) == 2) {
+          return getOpacity(weights[parseInt(target[1])],
+            Math.min.apply(null, weights), Math.max.apply(null, weights)
+          );
+        } else if (parseInt(source[0]) == 3) {
+          return getOpacity(weights[parseInt(source[1])],
+            Math.min.apply(null, weights), Math.max.apply(null, weights));
+        } else if (source[0] == 4) {
+          return getOpacity(weights[parseInt(source[1])],
+            Math.min.apply(null, weights), Math.max.apply(null, weights));
+        } else if (source[0] == 5) {
+          return 1;
+        } else if (source[0] == 6) {
+          return classopacity(data.convdata.log_certainty[parseInt(target[1])]);
+        }
+      });
+  }
+
+  assignValues();
+  update(0.5);
+
+  // fully connected layer should flow back to conv layer
 
   function update(val) {
     d3.select("#weightThresholdValue").text(" " + val);
     d3.select("#weightThreshold").property("value", val);
-    svg.selectAll(".link")
-      .attr("opacity", function(d) {
-        var op;
-        if (parseInt(d.target.name.split("_")[0]) == 7) {
-          op = classopacity(d.target.value);
-        } else if (parseInt(d.target.name.split("_")[0]) == 6) {
-          op = 1;
-        } else if (parseInt(d.target.name.split("_")[0]) <= 5) {
-          op = linkopacity(this.getAttribute("stroke-width"));
-        }
-        if (val <= op) {
-          return 1;
-        } else {
-          return 0.2;
-        }
-      });
+    d3.selectAll(".link").attr("opacity", function(d) {
+      return thresholdValue(d3.select(this).attr("weight"), val)
+    });
+  }
+
+  function getIndexesAndValues(data) {
+    var images = [];
+    for (i = 0; i < data.length; i++) {
+      var indexes = [];
+      var values = [];
+      for (j = 0; j < data[i].length; j++) {
+        read_index = data[i][j][1];
+        read_value = data[i][j][0];
+        indexes.push(read_index);
+        values.push(read_value);
+      }
+      images.push([indexes, values]);
+    }
+    return images;
   }
 
   var image = d3.selectAll(".node-image")
@@ -182,7 +249,7 @@ function gen_graph(data) {
     });
   });
 
-  init();
+
 
   var toggle = 0;
 
@@ -194,10 +261,6 @@ function gen_graph(data) {
     linkedByIndex[d.source.index + "," + d.target.index] = 1;
   });
 
-  function init() {
-    var nodes = d3.selectAll("image")[0];
-    toImage(data.convdata.features[1]["0"].feature_0, nodes[0]);
-  }
 
   function toImage(data, node) {
     var buffer = new Uint8ClampedArray(data);
@@ -255,7 +318,6 @@ function gen_graph(data) {
     } else {
       node.attr("opacity", 1);
       update(document.getElementById("weightThreshold").value);
-      console.log(document.getElementById("weightThreshold").value);
       toggle = 0;
     }
   }

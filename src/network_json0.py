@@ -96,7 +96,7 @@ def get_json(struct, node_type, value, separate_conv):
 					for k in range(len(layer[j - 1])):
 						link = {}
 						link['source'] = (j - 1) + struct[i] + (1 * i) - 1
-						link['target'] = struct[i] + struct[i] + (layer[j - 1][k][1]) + (1 * i) - 1
+						link['target'] = struct[i] + struct[i] + (layer[j - 1][k]) + (1 * i) - 1
 						links.append(link)
 			elif node_type[i + 1].split("_")[0] == 'pool':
 				first_instances = get_first_instance_index(separate_conv[index])
@@ -115,6 +115,6 @@ def get_first_instance_index(data):
 	array = []
 	for i in range(len(data)):
 		for j in range(len(data[i])):
-			if not data[i][j][1] in array:
-				array.append(data[i][j][1])
+			if not data[i][j] in array:
+				array.append(data[i][j])
 	return array
