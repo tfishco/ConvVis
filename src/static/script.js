@@ -31,14 +31,6 @@ function gen_graph(data) {
     .linkDistance(30)
     .size([width, height]);
 
-  var tip = d3.tip()
-    .attr('class', 'd3-tip')
-    .offset([-10, 0])
-    .attr("class", "tooltip")
-    .html(function(d) {
-      return d.name + "</span>";
-    })
-
   var color = d3.scale.category20();
 
   graph = JSON.parse(data.struct)
@@ -89,56 +81,64 @@ function gen_graph(data) {
     }
   }
 
-  function getDistance(targetId) {
-    var distances = [];
-    var jsonData = JSON.parse(data.struct).links;
-    for (i = 0; i < jsonData.length; i++) {
-      if (jsonData[i].target == targetId) {
-        distances.push(jsonData[i].source);
-      }
-    }
-    return distances;
-  };
-
-  function DFS(target) {
-    var sourceId = getDistance(target[target.length - 1]);
-    if (sourceId.length == 0) {
-      paths.push(target);
-    }
-    for (var i = 0; i < sourceId.length; i++) {
-      var copy = target.slice(0);
-      copy.push(sourceId[i]);
-      DFS(copy);
-    }
-  };
-
-  var paths = [];
-  DFS([193]);
-
-
-
   function assignValues() {
     var weights = data.weightdata.fc1[weightType];
-    links = svg.selectAll(".link")
-      .attr("weight", function(d) {
-        var source = d.source.name.split("_");
-        var target = d.target.name.split("_");
-        if (parseInt(source[0]) == 2) {
-          return getOpacity(weights[parseInt(target[1])],
-            Math.min.apply(null, weights), Math.max.apply(null, weights)
-          );
-        } else if (parseInt(source[0]) == 3) {
-          return getOpacity(weights[parseInt(source[1])],
-            Math.min.apply(null, weights), Math.max.apply(null, weights));
-        } else if (source[0] == 4) {
-          return getOpacity(weights[parseInt(source[1])],
-            Math.min.apply(null, weights), Math.max.apply(null, weights));
-        } else if (source[0] == 5) {
-          return 1;
-        } else if (source[0] == 6) {
-          return classopacity(data.convdata.log_certainty[parseInt(target[1])]);
+    links = svg.selectAll(".link")[0];
+    var magic_array_values = [];
+    var magic_array_indices = [];
+    for (i = 0; i < links.length; i++) {
+      d = links[i];
+      var d_data = links[i].__data__;
+      var source = d_data.source.name.split("_");
+      var target = d_data.target.name.split("_");
+      if (parseInt(source[0]) == 2) {
+        var op = getOpacity(weights[parseInt(target[1])],
+          Math.min.apply(null, weights), Math.max.apply(null, weights)
+        );
+        magic_array_values.push(op);
+        magic_array_indices.push(source[1]);
+        d.setAttribute("weight", op);
+      }
+    }
+    more_links = svg.selectAll(".link")[0];
+    for (i = 0; i < links.length; i++) {
+      d = links[i];
+      var d_data = links[i].__data__;
+      var source = d_data.source.name.split("_");
+      var target = d_data.target.name.split("_");
+      if (source[0] == 0) {
+        var largest = 0;
+        for (j = 0; j < magic_array_values.length; j++) {
+          if (parseInt(magic_array_indices[j]) == parseInt(target[1])) {
+            if (parseFloat(magic_array_values[j]) > parseFloat(largest)) {
+              largest = parseFloat(magic_array_values[j]);
+            }
+          }
         }
-      });
+        d.setAttribute("weight", largest);
+      } else if (source[0] == 1) {
+        var largest = 0;
+        for (j = 0; j < magic_array_values.length; j++) {
+          if (parseInt(magic_array_indices[j]) == parseInt(source[1])) {
+            if (parseFloat(magic_array_values[j]) > parseFloat(largest)) {
+              largest = parseFloat(magic_array_values[j]);
+            }
+          }
+        }
+        d.setAttribute("weight", largest);
+      } else if (parseInt(source[0]) == 3) {
+        d.setAttribute("weight", getOpacity(weights[parseInt(source[1])],
+          Math.min.apply(null, weights), Math.max.apply(null, weights)));
+      } else if (source[0] == 4) {
+        d.setAttribute("weight", getOpacity(weights[parseInt(source[1])],
+          Math.min.apply(null, weights), Math.max.apply(null, weights)));
+      } else if (source[0] == 5) {
+        d.setAttribute("weight", 1);
+      } else if (target[0] == 7) {
+        d.setAttribute("weight", classopacity(data.convdata.log_certainty[
+          parseInt(target[1])]));
+      }
+    }
   }
 
   assignValues();
@@ -150,7 +150,7 @@ function gen_graph(data) {
     d3.select("#weightThresholdValue").text(" " + val);
     d3.select("#weightThreshold").property("value", val);
     d3.selectAll(".link").attr("opacity", function(d) {
-      return thresholdValue(d3.select(this).attr("weight"), val)
+      return thresholdValue(parseFloat(d3.select(this).attr("weight")), val)
     });
   }
 
@@ -248,8 +248,6 @@ function gen_graph(data) {
       return "translate(" + d.x + "," + d.y + ")";
     });
   });
-
-
 
   var toggle = 0;
 
