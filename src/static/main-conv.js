@@ -6,12 +6,15 @@ p.value = JSON.stringify([
   ]
 ]);
 
-var convData;
+function toggleElement(id) {
+  var e = document.getElementById(id);
+  e.style.display = (e.style.display == 'block') ? 'none' : 'block';
+}
 
 $("#form-num").submit(function(e) {
   $.ajax({
-    type: "POST",
-    url: "/conv",
+    type: 'POST',
+    url: '/conv',
     data: $("#form-num").serialize(),
     success: function(data) {
       var jsondata = JSON.parse(data);
@@ -19,6 +22,32 @@ $("#form-num").submit(function(e) {
         .prediction;
       document.getElementById("actual").innerHTML = jsondata.label;
       gen_graph(jsondata);
+
+      var dn = document.getElementById("dataset-name");
+      var i = document.getElementById("iterations");
+      dn.value = jsondata.dataset;
+      i.value = jsondata.training_iter;
+
+      $("#form-data").submit(function(e) {
+        toggleElement('overlay');
+        $.ajax({
+          type: 'POST',
+          url: '/dataset_data',
+          data: $("#form-data").serialize(),
+          success: function(data) {
+            json_data = JSON.parse(data);
+            toggleElement('dataset-info');
+            e = document.getElementById('dataset-accuracy');
+            e.innerHTML = "Test accuracy: " + json_data.test_accuracy;
+            b = document.getElementById('close-overlay');
+            b.onclick = function() {
+              toggleElement('overlay');
+              toggleElement('dataset-info');
+            };
+          }
+        });
+        e.preventDefault();
+      });
     }
   });
   e.preventDefault();

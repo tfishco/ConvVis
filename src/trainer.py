@@ -17,6 +17,8 @@ else:
     print("Please use: sudo python app.py <dataset (mnist/cifar)> <training iterations>")
     quit()
 
+batch_number = 50
+
 if dataset == 'cifar':
     import cifar_10
     cifar_10.load_and_preprocess_input(dataset_dir='resource/CIFAR_data')
@@ -24,11 +26,14 @@ if dataset == 'cifar':
     test_data = cifar_10.validate_all['data'][:,:,:,None,1].reshape(-1,image_dimensions * image_dimensions)
     test_labels = cifar_10.validate_all['labels']
     image_dimensions = cifar_10.image_width
+    cifar_10.batch_size = batch_number
+
 elif dataset == 'mnist':
     mnist = input_data.read_data_sets('/src/resource/MNIST_data', one_hot=True)
     test_data = mnist.test.images
     test_labels = mnist.test.labels
     image_dimensions = 28
+
 
 sess = tf.Session()
 
@@ -44,7 +49,7 @@ train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-saver = tf.train.Saver(variables, max_to_keep = 11)
+saver = tf.train.Saver(variables, max_to_keep = 16)
 init_op = tf.initialize_all_variables()
 
 with tf.Session() as sess:
@@ -53,11 +58,11 @@ with tf.Session() as sess:
         if dataset=='cifar':
             batch = cifar_10.get_batch(i,cifar_10.train_all['data'], cifar_10.train_all['labels'])
         elif dataset =='mnist':
-            batch = mnist.train.next_batch(50)
-        if i % 100 == 0:
+            batch = mnist.train.next_batch(batch_number)
+        if i % 50 == 0:
             train_accuracy = accuracy.eval(feed_dict={
                 x:batch[0], y_: batch[1], keep_prob: 1.0})
-            print("step %d, training accuracy %g"%(i, train_accuracy))
+            print("%d:%g"%(i, train_accuracy))
             path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + "/pre-trained/" + dataset + "/graph_" + dataset + str(i)
             if not os.path.exists(path):
                 os.makedirs(path)
