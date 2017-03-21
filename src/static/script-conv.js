@@ -75,7 +75,7 @@ function gen_graph(data) {
 
   function thresholdValue(value, threshold) {
     if (threshold <= value) {
-      return 1;
+      return value;
     } else {
       return 0.1;
     }

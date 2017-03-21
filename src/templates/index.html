@@ -9,6 +9,14 @@
   </head>
   <body>
     <div class="container">
+      <div id="overlay">
+        <div id="dataset-info">
+          <div id="dataset-pie"></div>
+          <div id="dataset-bar"></div>
+          <div id="dataset-accuracy"></div>
+          <button id='close-overlay'>Return</button>
+        </div>
+      </div>
       <div class="sidebar">
         <div class="sidebarContainer">
           <h1 id="title">C O N V V I S</h1><br>
@@ -38,12 +46,19 @@
           <div id="dimension">
             <span id="image-dimensions"></span>
           </div>
+          <form id="form-data">
+            <input id="dataset-name" type="hidden" name="name">
+            <input id="iterations" type="hidden" name="iterations">
+            <br>
+            <input type="submit" value="Submit">
+          </form>
         </div>
       </div>
       <div class="canvas" id="canvasid"></div>
     </div>
     <script src="static/slider.js"></script>
-    <script src="static/script.js"></script>
+    <script src="static/script-conv.js"></script>
+    <script src="static/main-data.js"></script>
     <script src="static/main-conv.js"></script>
   </body>
 </html>

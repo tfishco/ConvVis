@@ -149,17 +149,39 @@ if dataset == 'mnist':
     actual_class_labels = list(range(10))
     image_dimensions = 28
 
-elif dataset == 'cifar':
+if dataset == 'cifar':
     import cifar_10
     cifar_10.load_and_preprocess_input(dataset_dir='resource/CIFAR_data')
-    test_data = cifar_10.validate_all['data'][:,:,:,None,1]
-    test_labels = cifar_10.validate_all['labels']
     image_dimensions = cifar_10.image_width
+    test_data = cifar_10.validate_all['data'][:,:,:,None,1].reshape(-1,image_dimensions * image_dimensions)
+    test_labels = cifar_10.validate_all['labels']
     actual_class_labels = cifar_10.actual_class_labels
-
-x = tf.placeholder("float", [image_dimensions * image_dimensions])
+    image_dimensions = cifar_10.image_width
 
 sess = tf.Session()
+
+with tf.variable_scope("conv"):
+    x = tf.placeholder("float", [None,image_dimensions * image_dimensions])
+    y_ = tf.placeholder(tf.float32, [None,10])
+    keep_prob = tf.placeholder(tf.float32)
+    y_conv, variables, features , separated_conv = classifier.conv(x, 1.0,image_dimensions)
+
+saver = tf.train.Saver(variables)
+saver.restore(sess, "pre-trained/" + dataset + "/graph_" + dataset + str(iterations) + "/" + dataset + ".ckpt")
+
+#init_op = tf.initialize_all_variables()
+#sess.run(init_op)
+
+
+def get_training(dataset):
+
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_conv, y_))
+    train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
+    correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    train_acc = accuracy.eval(session=sess,feed_dict={
+            x: test_data, y_: test_labels, keep_prob: 1.0})
+    return train_acc
 
 app = Flask(__name__)
 
@@ -167,11 +189,14 @@ app = Flask(__name__)
 def index():
     return render_template("index.html")
 
-with tf.variable_scope("conv"):
-    _, variables, features , separated_conv = classifier.conv(x, 1.0,image_dimensions)
-saver = tf.train.Saver(variables)
-saver.restore(sess, "pre-trained/" + dataset + "/graph_" + dataset + str(iterations) + "/" + dataset + ".ckpt")
-
+@app.route("/dataset_data", methods=['POST'])
+def dataset_data():
+    print("hello");
+    _dataset = request.form['name']
+    data_json = {}
+    accuracy = get_training(_dataset)
+    data_json['test_accuracy'] = float(accuracy)
+    return json.dumps(data_json)
 
 @app.route("/conv", methods=['POST'])
 def conv():
@@ -179,7 +204,7 @@ def conv():
     index = int(request.form['val'])
     struct = json.loads(request.form['struct'])
     #From test dataset
-    image = test_data[index].reshape((image_dimensions * image_dimensions,))
+    image = test_data[index].reshape((-1,image_dimensions * image_dimensions))
     label = test_labels[index]
     #JSON Construction to be sent to front end
     data = {}
@@ -188,7 +213,8 @@ def conv():
     data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
     separated_conv_data = get_highest_layer_activations(10,get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image})))
-    data['adjacency_matrix'] = separated_conv_data
+    data['dataset'] = dataset;
+    data['training_iter'] = iterations;
     data['struct'], data['no_nodes'] = network_json.get_json(struct[0], struct[1], data['convdata']['log_certainty'], separated_conv_data)
     return json.dumps(data)
 
