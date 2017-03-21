@@ -17,7 +17,7 @@ def get_image_brightness(image):
         total_brightness += image[i]
     return total_brightness
 
-def get_feature_json(features): # takes in contents of different layers in CNN e.g. conv1 or pool2
+def get_features(features): # takes in contents of different layers in CNN e.g. conv1 or pool2
     feature_list = []
     feature_brightness = []
     max_brightness = 0
@@ -50,12 +50,12 @@ def get_feature_map(layer, image_size, channels):
 
 def get_conv_data(feature_list):
     features = {}
-    features['1'], max1 = get_feature_json(np.array(np.round(np.multiply(feature_list[0], 255), decimals=0).tolist()))
-    features['2'], max2 = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[1], image_dimensions, 32), 255), decimals=0))
-    features['3'], max3 = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[2], image_dimensions / 2, 32), 255), decimals=0))
-    features['4'], max4 = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[3], image_dimensions / 2, 64), 255), decimals=0))
-    features['5'], max5 = get_feature_json(np.round(np.multiply(get_feature_map(feature_list[4], image_dimensions / 4, 64), 255), decimals=0))
-    features['6'], max6 = get_feature_json([np.round(np.multiply(feature_list[6], 255), decimals=0)])
+    features['1'], max1 = get_features(np.array(np.round(np.multiply(feature_list[0], 255), decimals=0).tolist()))
+    features['2'], max2 = get_features(np.round(np.multiply(get_feature_map(feature_list[1], image_dimensions, 32), 255), decimals=0))
+    features['3'], max3 = get_features(np.round(np.multiply(get_feature_map(feature_list[2], image_dimensions / 2, 32), 255), decimals=0))
+    features['4'], max4 = get_features(np.round(np.multiply(get_feature_map(feature_list[3], image_dimensions / 2, 64), 255), decimals=0))
+    features['5'], max5 = get_features(np.round(np.multiply(get_feature_map(feature_list[4], image_dimensions / 4, 64), 255), decimals=0))
+    features['6'], max6 = get_features([np.round(np.multiply(feature_list[6], 255), decimals=0)])
 
     data = {}
     data['features'] = features
@@ -169,19 +169,24 @@ with tf.variable_scope("conv"):
 saver = tf.train.Saver(variables)
 saver.restore(sess, "pre-trained/" + dataset + "/graph_" + dataset + str(iterations) + "/" + dataset + ".ckpt")
 
-#init_op = tf.initialize_all_variables()
-#sess.run(init_op)
-
-
 def get_training(dataset):
-
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_conv, y_))
     train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
     correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    train_acc = accuracy.eval(session=sess,feed_dict={
+    individual_test(test_data, test_labels)
+    #train_acc = accuracy.eval(session=sess,feed_dict={
+    #        x: test_data, y_: test_labels, keep_prob: 1.0})
+    return 0
+
+def individual_test(test_data, test_labels):
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_conv, y_))
+    train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
+    correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    test_prediction = sess.run(features, feed_dict={
             x: test_data, y_: test_labels, keep_prob: 1.0})
-    return train_acc
+    print(np.array(test_prediction[7]).shape)
 
 app = Flask(__name__)
 
@@ -213,7 +218,6 @@ def conv():
     data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
     separated_conv_data = get_highest_layer_activations(10,get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image})))
-    data['dataset'] = dataset;
     data['training_iter'] = iterations;
     data['struct'], data['no_nodes'] = network_json.get_json(struct[0], struct[1], data['convdata']['log_certainty'], separated_conv_data)
     return json.dumps(data)

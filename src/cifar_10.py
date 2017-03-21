@@ -54,7 +54,7 @@ image_depth=3
 learning_rate=0.01
 n_epochs=20
 #only the first 2000 samples is used for validating
-n_validate_samples=2000
+n_validate_samples=10000
 n_test_samples=5
 n_checkpoint_steps=5
 #regular expression that matches a datafile
@@ -139,6 +139,9 @@ def load_and_preprocess_input(dataset_dir=None):
      #transform the test images in the same manner as the train images
     train_all['data'], train_all['labels'] = prepare_input(data=trn_all_data, labels=trn_all_labels)
     validate_and_test_data, validate_and_test_labels = prepare_input(data=vldte_all_data, labels=vldte_all_labels)
+
+    test_all['data'] = validate_and_test_data[n_validate_samples:(n_validate_samples+n_test_samples), :, :, :]
+    test_all['labels'] = validate_and_test_labels[n_validate_samples:(n_validate_samples+n_test_samples)]
 
     validate_all['data'] = validate_and_test_data[0:n_validate_samples, :, :, :]
     validate_all['labels'] = format_labels(validate_and_test_labels[0:n_validate_samples])
