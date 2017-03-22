@@ -8,10 +8,11 @@ import json
 import network_json0 as network_json
 import sys
 import os
-
 import classifier
+import argparse
 
 def get_image_brightness(image):
+    """Gets the total pixel brightness for an array of pixels"""
     total_brightness = 0
     for i in range(len(image)):
         total_brightness += image[i]
@@ -35,6 +36,9 @@ def get_features(features): # takes in contents of different layers in CNN e.g. 
     return feature_list, max_brightness
 
 def to_rgba(images): # takes in the images contained inside a feature
+    """Converts array of single channel image into four channel by replicating
+    the value and adding 255 for alpha.
+    """
     image_list = []
     for i in range(len(images)):
         for j in range(len(images[i])):
@@ -44,11 +48,17 @@ def to_rgba(images): # takes in the images contained inside a feature
     return image_list
 
 def get_feature_map(layer, image_size, channels):
+    """Transposes the volume into a simpler format to parse"""
     temp_image = layer.reshape((image_size, image_size, channels))
     temp_image = temp_image.transpose((2, 0, 1))
     return temp_image.reshape((-1, image_size, image_size, 1))
 
 def get_conv_data(feature_list):
+    """Creates a dictionary to represent the ConvNet. JSON of form :
+                                                {features: [...], data: [...]}
+    Features contains pixel values for convolution layers, Data contains other
+    various metrics
+    """
     features = {}
     features['1'], max1 = get_features(np.array(np.round(np.multiply(feature_list[0], 255), decimals=0).tolist()))
     features['2'], max2 = get_features(np.round(np.multiply(get_feature_map(feature_list[1], image_dimensions, 32), 255), decimals=0))
@@ -127,36 +137,40 @@ def get_highest_layer_activations(threshold, data):
         top_brightness.append(layers)
     return top_brightness
 
-if len(sys.argv) == 3:
-    if(sys.argv[1] != 'mnist' and sys.argv[1] != 'cifar'):
-        print("Please use 'mnist' or 'cifar' in dataset selection")
-        quit()
-    else:
-        dataset = sys.argv[1]
-    if os.path.isdir("pre-trained/" + dataset + "/graph_" + dataset + str(sys.argv[2])):
-        iterations = sys.argv[2]
-    else:
-      print("Training iteration does not exist")
-      quit()
-else:
-    print("Please use: sudo python app.py <dataset (mnist/cifar)> <training iterations>")
+parser = argparse.ArgumentParser(description='ConvNet trainer usage.')
+parser.add_argument('dataset', metavar='D', type=str, help='The name of the dataset. (mnist/cifar)')
+parser.add_argument('iterations', metavar='I', type=int, help='The number of training iterations')
+parser.add_argument('batch_number', metavar='B', type=int, help='A value for the number of batches used to train the network')
+parser.add_argument('dropout', metavar='DR', type=bool, help='Toggle for dropout in/exclusion. (True/False)')
+
+args = parser.parse_args()
+
+#Extracting commandline arguments from args. namespace
+dataset = args.dataset
+iterations = args.iterations
+dropout = args.dropout
+batch_number = args.batch_number
+
+#Checking if dataset is cifar or mnist
+if(dataset != 'mnist' and dataset != 'cifar'):
+    print("Please use 'mnist' or 'cifar' in dataset selection")
     quit()
+else:
+    if dataset == 'mnist':
+        mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
+        test_data = mnist.test.images
+        test_labels = mnist.test.labels
+        actual_class_labels = list(range(10))
+        image_dimensions = 28
 
-if dataset == 'mnist':
-    mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
-    test_data = mnist.test.images
-    test_labels = mnist.test.labels
-    actual_class_labels = list(range(10))
-    image_dimensions = 28
-
-if dataset == 'cifar':
-    import cifar_10
-    cifar_10.load_and_preprocess_input(dataset_dir='resource/CIFAR_data')
-    image_dimensions = cifar_10.image_width
-    test_data = cifar_10.validate_all['data'][:,:,:,None,1].reshape(-1,image_dimensions * image_dimensions)
-    test_labels = cifar_10.validate_all['labels']
-    actual_class_labels = cifar_10.actual_class_labels
-    image_dimensions = cifar_10.image_width
+    if dataset == 'cifar':
+        import cifar_10
+        cifar_10.load_and_preprocess_input(dataset_dir='resource/CIFAR_data')
+        image_dimensions = cifar_10.image_width
+        test_data = cifar_10.validate_all['data'][:,:,:,None,1].reshape(-1,image_dimensions * image_dimensions)
+        test_labels = cifar_10.validate_all['labels']
+        actual_class_labels = cifar_10.actual_class_labels
+        image_dimensions = cifar_10.image_width
 
 sess = tf.Session()
 
@@ -188,14 +202,17 @@ def individual_test(test_data, test_labels):
             x: test_data, y_: test_labels, keep_prob: 1.0})
     print(np.array(test_prediction[7]).shape)
 
+#Setting up the Flask container
 app = Flask(__name__)
 
+#Default route for the app
 @app.route("/")
 def index():
     return render_template("index.html")
 
 @app.route("/dataset_data", methods=['POST'])
 def dataset_data():
+    """Returns JSON containing information about loaded dataset"""
     print("hello");
     _dataset = request.form['name']
     data_json = {}
@@ -205,6 +222,9 @@ def dataset_data():
 
 @app.route("/conv", methods=['POST'])
 def conv():
+    """Returns JSON containing information about the selected test entry.
+    Requires a 'val' and 'struct' from the requester.
+    """
     #Recieved from post
     index = int(request.form['val'])
     struct = json.loads(request.form['struct'])
