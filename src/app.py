@@ -1,6 +1,7 @@
 import tensorflow as tf
 from flask import Flask, render_template, request, send_file
 from tensorflow.examples.tutorials.mnist import input_data
+from tensorflow.contrib.learn.python.learn.datasets.mnist import DataSet
 import random
 import math
 import numpy as np
@@ -10,6 +11,7 @@ import sys
 import os
 import classifier
 import argparse
+import datasets
 
 def get_image_brightness(image):
     """Gets the total pixel brightness for an array of pixels"""
@@ -140,7 +142,6 @@ def get_highest_layer_activations(threshold, data):
 parser = argparse.ArgumentParser(description='ConvNet trainer usage.')
 parser.add_argument('dataset', metavar='D', type=str, help='The name of the dataset. (mnist/cifar)')
 parser.add_argument('iterations', metavar='I', type=int, help='The number of training iterations')
-parser.add_argument('batch_number', metavar='B', type=int, help='A value for the number of batches used to train the network')
 parser.add_argument('dropout', metavar='DR', type=bool, help='Toggle for dropout in/exclusion. (True/False)')
 
 args = parser.parse_args()
@@ -149,36 +150,28 @@ args = parser.parse_args()
 dataset = args.dataset
 iterations = args.iterations
 dropout = args.dropout
-batch_number = args.batch_number
 
 #Checking if dataset is cifar or mnist
 if(dataset != 'mnist' and dataset != 'cifar'):
     print("Please use 'mnist' or 'cifar' in dataset selection")
     quit()
 else:
-    if dataset == 'mnist':
-        mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
-        test_data = mnist.test.images
-        test_labels = mnist.test.labels
-        actual_class_labels = list(range(10))
-        image_dimensions = 28
+    if dataset == 'cifar': #Imports file to parse cifar-10
+        loaded_data = datasets.CIFAR_Data()
 
-    if dataset == 'cifar':
-        import cifar_10
-        cifar_10.load_and_preprocess_input(dataset_dir='resource/CIFAR_data')
-        image_dimensions = cifar_10.image_width
-        test_data = cifar_10.validate_all['data'][:,:,:,None,1].reshape(-1,image_dimensions * image_dimensions)
-        test_labels = cifar_10.validate_all['labels']
-        actual_class_labels = cifar_10.actual_class_labels
-        image_dimensions = cifar_10.image_width
+    elif dataset == 'mnist':
+        loaded_data = datasets.MNIST_Data()
+
+test_data = loaded_data.test_dataset
+
+image_dimensions = loaded_data.image_dimensions
 
 sess = tf.Session()
-
 with tf.variable_scope("conv"):
     x = tf.placeholder("float", [None,image_dimensions * image_dimensions])
     y_ = tf.placeholder(tf.float32, [None,10])
     keep_prob = tf.placeholder(tf.float32)
-    y_conv, variables, features , separated_conv = classifier.conv(x, 1.0,image_dimensions)
+    y_conv, variables, features , separated_conv = classifier.conv(x, 1.0,image_dimensions, dropout)
 
 saver = tf.train.Saver(variables)
 saver.restore(sess, "pre-trained/" + dataset + "/graph_" + dataset + str(iterations) + "/" + dataset + ".ckpt")
@@ -229,8 +222,8 @@ def conv():
     index = int(request.form['val'])
     struct = json.loads(request.form['struct'])
     #From test dataset
-    image = test_data[index].reshape((-1,image_dimensions * image_dimensions))
-    label = test_labels[index]
+    image = test_data.images[index].reshape((-1,image_dimensions * image_dimensions))
+    label = test_data.labels[index]
     #JSON Construction to be sent to front end
     data = {}
     data['label'] = np.argmax(label)

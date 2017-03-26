@@ -12,20 +12,17 @@ from matplotlib import pyplot as plt
 sys.path.insert(0, 'pre-trained/')
 
 import classifier
-import cifar_10
 
 mnist = input_data.read_data_sets('resource/MNIST_data', one_hot=True)
-
-cifar_10.load_and_preprocess_input(dataset_dir='src/resource/CIFAR_data')
 
 x = tf.placeholder("float", [784])
 
 sess = tf.Session()
 
 with tf.variable_scope("conv"):
-    prediction , variables, features, separate_conv = classifier.conv(x, 1.0)
+    prediction , variables, features, separate_conv = classifier.conv(x, 1.0,28,True)
 saver = tf.train.Saver(variables)
-saver.restore(sess, "pre-trained/mnist/graph_mnist100/mnist.ckpt")
+saver.restore(sess, "pre-trained/mnist/graph_mnist800/mnist.ckpt")
 
 def get_separate_conv_data(data, threshold):
     separate = {}
@@ -64,11 +61,8 @@ index = 0
 image = mnist.test.images[index]
 label = mnist.test.labels[index]
 
-conv_array_seperate = np.array(sess.run(separate_conv, feed_dict={x:image}))
-
-conv_array_json = get_separate_conv_data(conv_array_seperate,10)
-
-print(conv_array_json['separate_conv1'])
+features_array = sess.run(features, feed_dict={x:image})
+print(tf.shape(features_array))
 
 #print("Actual=", mnist.test.labels[index].argmax(), ": Prediction=", features[1])
 
@@ -76,14 +70,12 @@ print(conv_array_json['separate_conv1'])
 
 #print(np.absolute(y2[0][0].squeeze()))
 
-#fig = plt.figure()
-#fig.add_subplot(111)
-#plt.imshow(np.absolute(y1[0][0].squeeze()), cmap='gray')
-#plt.axis('off')
-#for j in range(32):
-#    fig.add_subplot(1,33,j + 1)
-#    plt.imshow(y2[2][j].squeeze(), cmap='gray')
-#    plt.axis('off')
+fig = plt.figure()
+plt.axis('off')
+for j in range(32):
+    fig.add_subplot(1,33,j + 1)
+    plt.imshow(features_array[j], cmap='gray')
+    plt.axis('off')
 #for j in range(32):
 #    fig.add_subplot(2,33,j + 1)
 #    plt.imshow(features_pool1[j].squeeze(), cmap='gray')
@@ -96,6 +88,6 @@ print(conv_array_json['separate_conv1'])
 #    fig.add_subplot(4,65,j + 1)
 #    plt.imshow(features_pool2[j].squeeze(), cmap='gray')
 #    plt.axis('off')
-#plt.show()
+plt.show()
 #print("test accuracy %g"%accuracy.eval(feed_dict={
 #    x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
