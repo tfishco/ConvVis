@@ -227,7 +227,7 @@ def conv():
     #JSON Construction to be sent to front end
     data = {}
     data['label'] = np.argmax(label)
-    data['actual_class_labels'] = actual_class_labels
+    data['actual_class_labels'] = loaded_data.actual_class_labels
     data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
     separated_conv_data = get_highest_layer_activations(10,get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image})))

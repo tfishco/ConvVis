@@ -12,6 +12,8 @@ class MNIST_Data:
 
         self.image_dimensions = 28
 
+        self.actual_class_labels = range(10)
+
 class CIFAR_Data:
     def __init__(self):
         import cifar_10
@@ -24,3 +26,5 @@ class CIFAR_Data:
         cifar_10.train_all['labels'], reshape=False)
 
         self.image_dimensions = cifar_10.image_width
+
+        self.actual_class_labels = cifar_10.actual_class_labels
