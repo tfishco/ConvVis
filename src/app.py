@@ -6,12 +6,13 @@ import random
 import math
 import numpy as np
 import json
-import network_json0 as network_json
+import network_json
 import sys
 import os
 import classifier
 import argparse
 import datasets
+import inspect
 
 def get_image_brightness(image):
     """Gets the total pixel brightness for an array of pixels"""
@@ -139,28 +140,44 @@ def get_highest_layer_activations(threshold, data):
         top_brightness.append(layers)
     return top_brightness
 
+def check_dataset(value):
+    svalue = str(value)
+    if svalue != 'mnist' and svalue != 'cifar':
+        raise argparse.ArgumentTypeError("Enter a valid dataset. (mnist/cifar)")
+    return svalue
+
+def check_pos(value):
+    ivalue = str(value)
+    if ivalue <= 0:
+        raise argparse.ArgumentTypeError("Enter a valid training iteration (>0)")
+    return ivalue
+
 parser = argparse.ArgumentParser(description='ConvNet trainer usage.')
-parser.add_argument('dataset', metavar='D', type=str, help='The name of the dataset. (mnist/cifar)')
-parser.add_argument('iterations', metavar='I', type=int, help='The number of training iterations')
-parser.add_argument('dropout', metavar='DR', type=bool, help='Toggle for dropout in/exclusion. (True/False)')
+parser.add_argument('dataset', metavar='D', type=check_dataset, help='The name of the dataset. (mnist/cifar)')
+parser.add_argument('iterations', metavar='I', type=check_pos, help='The training iteration to restore (>0).')
 
 args = parser.parse_args()
 
 #Extracting commandline arguments from args. namespace
 dataset = args.dataset
 iterations = args.iterations
-dropout = args.dropout
+
+path_main = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + "/pre-trained/" + dataset
+if not os.path.exists(path_main):
+    print("")
+    print(dataset + " data does not exist, please train a model.")
+    quit()
+path_data = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + "/pre-trained/" + dataset + "/graph_" + dataset + str(iterations)
+if not os.path.exists(path_data):
+    print("")
+    print(dataset + " iteration: " + iterations + " data does not exist, please train a model.")
+    quit()
 
 #Checking if dataset is cifar or mnist
-if(dataset != 'mnist' and dataset != 'cifar'):
-    print("Please use 'mnist' or 'cifar' in dataset selection")
-    quit()
-else:
-    if dataset == 'cifar': #Imports file to parse cifar-10
-        loaded_data = datasets.CIFAR_Data()
-
-    elif dataset == 'mnist':
-        loaded_data = datasets.MNIST_Data()
+if dataset == 'cifar': #Imports file to parse cifar-10
+    loaded_data = datasets.CIFAR_Data()
+elif dataset == 'mnist':
+    loaded_data = datasets.MNIST_Data()
 
 test_data = loaded_data.test_dataset
 
@@ -170,30 +187,19 @@ sess = tf.Session()
 with tf.variable_scope("conv"):
     x = tf.placeholder("float", [None,image_dimensions * image_dimensions])
     y_ = tf.placeholder(tf.float32, [None,10])
-    keep_prob = tf.placeholder(tf.float32)
-    y_conv, variables, features , separated_conv = classifier.conv(x, 1.0,image_dimensions, dropout)
+    y_conv, variables, features , separated_conv = classifier.conv(x,image_dimensions,1.0)
 
 saver = tf.train.Saver(variables)
 saver.restore(sess, "pre-trained/" + dataset + "/graph_" + dataset + str(iterations) + "/" + dataset + ".ckpt")
 
-def get_training(dataset):
+def get_training():
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_conv, y_))
     train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
     correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    individual_test(test_data, test_labels)
-    #train_acc = accuracy.eval(session=sess,feed_dict={
-    #        x: test_data, y_: test_labels, keep_prob: 1.0})
-    return 0
-
-def individual_test(test_data, test_labels):
-    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_conv, y_))
-    train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
-    correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    test_prediction = sess.run(features, feed_dict={
-            x: test_data, y_: test_labels, keep_prob: 1.0})
-    print(np.array(test_prediction[7]).shape)
+    train_acc = accuracy.eval(session=sess,feed_dict={
+            x: test_data.images, y_: test_data.labels})
+    return train_acc
 
 #Setting up the Flask container
 app = Flask(__name__)
@@ -206,10 +212,9 @@ def index():
 @app.route("/dataset_data", methods=['POST'])
 def dataset_data():
     """Returns JSON containing information about loaded dataset"""
-    print("hello");
     _dataset = request.form['name']
     data_json = {}
-    accuracy = get_training(_dataset)
+    accuracy = get_training()
     data_json['test_accuracy'] = float(accuracy)
     return json.dumps(data_json)
 

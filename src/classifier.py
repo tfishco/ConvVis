@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-def conv(x, keep_prob, image_dim, dropout):
+def conv(x,image_dim,keep_prob):
 	""" A method used to obtain variables contained within the ConvNet as well
 	as to feed variables into the network.
 
@@ -133,10 +133,7 @@ def conv(x, keep_prob, image_dim, dropout):
 
 	h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 
-	if dropout:
-		h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
-	else:
-		h_fc1_drop = h_fc1
+	h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
 	W_fc2 = weight_variable([1024, 10])
 	b_fc2 = bias_variable([10])

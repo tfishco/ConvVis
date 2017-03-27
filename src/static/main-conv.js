@@ -18,9 +18,6 @@ $("#form-num").submit(function(e) {
     data: $("#form-num").serialize(),
     success: function(data) {
       var jsondata = JSON.parse(data);
-      document.getElementById("prediction").innerHTML = jsondata.convdata
-        .prediction;
-      document.getElementById("actual").innerHTML = jsondata.label;
       gen_graph(jsondata);
 
       var dn = document.getElementById("dataset-name");
