@@ -82,6 +82,82 @@ function gen_graph(data) {
   }
 
   function assignValues() {
+    var allPaths = [];
+    var path = [];
+    var currentPath = new Set();
+
+    function get_adj_vert(links, link) {
+      var adjacent = []
+      for (var i = 0; i < links.length; i++) {
+        if (links[i].source == link) {
+          adjacent.push(links[i].target);
+        }
+      }
+      return adjacent;
+    }
+
+    function getPaths(links, startIndex, endIndex) {
+      path.push(startIndex);
+      currentPath.add(startIndex);
+      if (startIndex === endIndex) {
+        var array_copy = path.slice();
+        allPaths.push(array_copy);
+      } else {
+        var adjacent = get_adj_vert(links, startIndex);
+        for (var i = 0; i < adjacent.length; i++) {
+          var temp_node = adjacent[i];
+          if (!currentPath.has(temp_node)) {
+            getPaths(links, temp_node, endIndex);
+          }
+        }
+      }
+      path.pop();
+      currentPath.delete(startIndex);
+    }
+
+    var all_links = svg.selectAll(".link")[0];
+
+    getPaths(JSON.parse(data.struct).links, 0, 193);
+
+    var weights = data.weightdata.fc1[weightType];
+    var pathValue = [];
+
+    for (var i = 0; i < allPaths.length; i++) {
+      pathValue.push(weights[all_links[allPaths[i][4]].__data__.source.name.split(
+        "_")[1]]);
+    }
+
+    function getOtherWalks(index) {
+      var indexes = [];
+      for (var i = 0; i < allPaths.length; i++) {
+        if (allPaths[i].includes(index)) {
+          indexes.push(i);
+        }
+      }
+      return indexes;
+    }
+
+    console.log(pathValue);
+
+    svg.selectAll(".link").attr("weight", function(d) {
+      var sourceName = d.source.name;
+      var sourceIndex = d.source.index;
+      var targetName = d.target.name;
+      var targetIndex = d.target.index;
+      if (sourceName.split("_")[0] == 4) {
+        return getOpacity(weights[sourceName.split("_")[1]],
+          Math.min.apply(null, weights), Math.max.apply(null, weights)
+        );
+      } else if (targetName.split("_")[0] == 6) {
+        return 1;
+      } else if (targetName.split("_")[0] == 7) {
+        return classopacity(data.convdata.log_certainty[
+          parseInt(targetName.split("_")[1])]);
+      }
+    });
+  }
+
+  function assignValues1() {
     var weights = data.weightdata.fc1[weightType];
     links = svg.selectAll(".link")[0];
     var magic_array_values = [];
@@ -128,10 +204,12 @@ function gen_graph(data) {
         d.setAttribute("weight", largest);
       } else if (parseInt(source[0]) == 3) {
         d.setAttribute("weight", getOpacity(weights[parseInt(source[1])],
-          Math.min.apply(null, weights), Math.max.apply(null, weights)));
+          Math.min.apply(null, weights), Math.max.apply(null, weights)
+        ));
       } else if (source[0] == 4) {
         d.setAttribute("weight", getOpacity(weights[parseInt(source[1])],
-          Math.min.apply(null, weights), Math.max.apply(null, weights)));
+          Math.min.apply(null, weights), Math.max.apply(null, weights)
+        ));
       } else if (source[0] == 5) {
         d.setAttribute("weight", 1);
       } else if (target[0] == 7) {
@@ -141,7 +219,7 @@ function gen_graph(data) {
     }
   }
 
-  assignValues();
+  assignValues1();
   update(0.5);
 
   // fully connected layer should flow back to conv layer
@@ -150,7 +228,8 @@ function gen_graph(data) {
     d3.select("#weightThresholdValue").text(" " + val);
     d3.select("#weightThreshold").property("value", val);
     d3.selectAll(".link").attr("opacity", function(d) {
-      return thresholdValue(parseFloat(d3.select(this).attr("weight")), val)
+      return thresholdValue(parseFloat(d3.select(this).attr("weight")),
+        val)
     });
   }
 

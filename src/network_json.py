@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from sets import Set
 
 def get_coords(vert_size_gap, horiz_size_gap, no_columns, layers, layers_size, height_offset):
 	y_offset = 30
@@ -84,7 +85,8 @@ def get_json(struct, node_type, value, separate_conv):
 					link['target'] = 194
 					links.append(link)
 				else:
-					first_instances = get_first_instance_index(separate_conv[index + 1])
+					first_instances = get_all_instances(separate_conv[index + 1])
+					print(first_instances)
 					for j in first_instances:
 						link = {}
 						link['source'] = struct[i - 1] + struct[i - 1] + j + (struct[i] * index) + 1
@@ -110,6 +112,13 @@ def get_json(struct, node_type, value, separate_conv):
 	main['nodes'] = nodes
 	main['links'] = links
 	return json.dumps(main) , struct
+
+def get_all_instances(data):
+	s = Set()
+	for i in range(len(data)):
+		for j in range(len(data[i])):
+			s.add(data[i][j])
+	return s
 
 def get_first_instance_index(data):
 	array = []

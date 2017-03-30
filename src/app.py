@@ -105,11 +105,13 @@ def get_separate_conv_data(data):
             layer = np.array([layer.tolist()])
         activations = []
         for j in range(len(layer)):             # iterate through images in conv layers
+            shape = layer.squeeze().shape[0]
+            print(shape)
             input_activations = np.array(layer[j]).squeeze()
-            activation_brightnesses = []
+            activation_brightnesses = [0] * shape
             for k in range(len(input_activations)):    #iterate through image activations
                 activation_brightness = get_image_brightness(input_activations[k].flatten())
-                activation_brightnesses.append(activation_brightness)
+                activation_brightnesses[k] = activation_brightness
             activations.append(activation_brightnesses)
         conv_layers.append(activations)
     return conv_layers
@@ -126,6 +128,7 @@ def get_highest_layer_activations(threshold, data):
     for i in range(len(data)): #iterate through layers
         layers = []
         for j in range(len(data[i])): #iterate through images in layers
+            print(np.array(data[i][j]).shape)
             max_indexes = np.array(data[i][j]).argsort()[-threshold:][::-1]
             max_vals = []
             if i < 1:
@@ -165,7 +168,7 @@ iterations = args.iterations
 path_main = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + "/pre-trained/" + dataset
 if not os.path.exists(path_main):
     print("")
-    print(dataset + " data does not exist, please train a model.")
+    print("Data for " + dataset + " does not exist, please train a model.")
     quit()
 path_data = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + "/pre-trained/" + dataset + "/graph_" + dataset + str(iterations)
 if not os.path.exists(path_data):
@@ -236,6 +239,7 @@ def conv():
     data['weightdata'] = get_weight_data(sess.run(variables, feed_dict={x:image}))
     data['convdata'] = get_conv_data(sess.run(features, feed_dict={x:image}))
     separated_conv_data = get_highest_layer_activations(10,get_separate_conv_data(sess.run(separated_conv, feed_dict={x:image})))
+    data['separated_conv_data'] = separated_conv_data
     data['training_iter'] = iterations;
     data['struct'], data['no_nodes'] = network_json.get_json(struct[0], struct[1], data['convdata']['log_certainty'], separated_conv_data)
     return json.dumps(data)

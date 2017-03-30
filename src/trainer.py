@@ -61,7 +61,8 @@ train_data = loaded_data.train_dataset
 
 image_dimensions = loaded_data.image_dimensions
 
-if batch_size > len(train_data.images):
+
+if batch_size > len(train_data.images) - 1:
     print("Batch data exceeds size of training data. Enter a value smaller than " + str(len(train_data.images)))
     quit()
 
