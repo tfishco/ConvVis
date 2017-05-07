@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-def conv(x, keep_prob, image_dim, dropout):
+def conv(x,image_dim,keep_prob):
 	""" A method used to obtain variables contained within the ConvNet as well
 	as to feed variables into the network.
 
@@ -63,18 +63,18 @@ def conv(x, keep_prob, image_dim, dropout):
 		convolutions = []
 		#Iterates through the third dimension of the weight volume, since the
 		#this dimension is the antecedent layer volume depths
-		for i in range(W[:].get_shape()[2]):
+		for i in range(W[:].get_shape()[3]):
 			#Slices input volume x along its fourth dimension, using None types
 			#to maintain original dimenions and obtaining a volume of features
-			single_x = x[:,:,:,None,i]
 			#Slices the weight volume along its second dimension, to obtain a
 			#volume of weights of the same depth .
-			image_W = W[:,:,None,i,:]
+			image_W = W[:,:,:,None,i]
 			new = []
 			#Iterates through W's fourth dimension,
-			for j in range(W[:].get_shape()[3]):
+			for j in range(W[:].get_shape()[2]):
+				single_x = x[:,:,:,None,j]
 				#Obtains a single weights matrix
-				single_W = image_W[:,:,:,None,j]
+				single_W = image_W[:,:,None,j,:]
 				#Convolves this matrix with the volume from single_x
 				conv = tf.nn.relu(conv2d(single_x, single_W))
 				new.append(conv)
@@ -133,10 +133,7 @@ def conv(x, keep_prob, image_dim, dropout):
 
 	h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 
-	if dropout:
-		h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
-	else:
-		h_fc1_drop = h_fc1
+	h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
 	W_fc2 = weight_variable([1024, 10])
 	b_fc2 = bias_variable([10])

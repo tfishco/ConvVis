@@ -95,7 +95,6 @@ div.tooltip {
   display: none; /*dim the background*/
 }
 
-/* just some content with arbitrary styles for explanation purposes */
 #dataset-info {
     width: 700px;
     height: 500px;
@@ -110,4 +109,9 @@ div.tooltip {
     text-align: center;
     z-index: 11;
     display: none; /* 1px higher than the overlay layer */
+}
+
+form .error {
+  color: #ff0000;
+  font-size: 10px;
 }
