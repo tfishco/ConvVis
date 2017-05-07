@@ -79,7 +79,6 @@ def get_conv_data(feature_list):
     return data
 
 def get_weight_data(weights_list):
-    print(len(weights_list[4]))
     data = {}
     data['fc1'] = get_fc1_sum(weights_list[4].tolist(), image_dimensions / 4 * image_dimensions / 4)
     return data
@@ -92,8 +91,8 @@ def get_fc1_sum(weight_list, area):
         for j in range(area):
             image_weights.append(np.sum(np.array(weight_list[i + j])))
         pixel_weights.append(np.sum(np.array(image_weights)))
-    data['abs'] = np.divide(np.absolute(np.array(pixel_weights)),8).tolist()
-    data['raw'] = np.divide(np.array(pixel_weights),8).tolist()
+    data['abs'] = np.divide(np.absolute(np.array(pixel_weights)),8)[:33].tolist()
+    data['raw'] = np.divide(np.array(pixel_weights),8)[:33].tolist()
     return data
 
 def get_separate_conv_data(data):
@@ -106,7 +105,7 @@ def get_separate_conv_data(data):
         activations = []
         for j in range(len(layer)):             # iterate through images in conv layers
             shape = layer.squeeze().shape[0]
-            print(shape)
+            #print(shape)
             input_activations = np.array(layer[j]).squeeze()
             activation_brightnesses = [0] * shape
             for k in range(len(input_activations)):    #iterate through image activations
@@ -128,7 +127,7 @@ def get_highest_layer_activations(threshold, data):
     for i in range(len(data)): #iterate through layers
         layers = []
         for j in range(len(data[i])): #iterate through images in layers
-            print(np.array(data[i][j]).shape)
+            #print(np.array(data[i][j]).shape)
             max_indexes = np.array(data[i][j]).argsort()[-threshold:][::-1]
             max_vals = []
             if i < 1:

@@ -86,7 +86,6 @@ def get_json(struct, node_type, value, separate_conv):
 					links.append(link)
 				else:
 					first_instances = get_all_instances(separate_conv[index + 1])
-					print(first_instances)
 					for j in first_instances:
 						link = {}
 						link['source'] = struct[i - 1] + struct[i - 1] + j + (struct[i] * index) + 1
@@ -126,4 +125,5 @@ def get_first_instance_index(data):
 		for j in range(len(data[i])):
 			if not data[i][j] in array:
 				array.append(data[i][j])
+
 	return array

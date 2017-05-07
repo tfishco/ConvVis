@@ -1,6 +1,6 @@
 function gen_graph(data) {
 
-  var weightType = "raw"; // abs or raw
+  var weightType = "abs"; // abs or raw
 
   function reset() {
     d3.selectAll("svg").remove();
